@@ -3,21 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sh8lny.Domain.Entities;
 
+/// <summary>
+/// A review written BY a User (U_id) ABOUT either a 
+/// CompanyProfile (cId) OR a StudentProfile (std).
+/// </summary>
 public class Review
 {
     [Key]
     public int Id { get; set; }
-    
-    public int Rating { get; set; } 
-    
+
+    public int Rating { get; set; } // 1-5
+
     [Column(TypeName = "text")]
-    public string? Comment { get; set; }
-    
+    public string Comment { get; set; }
+
     public DateTime CreatedAt { get; set; }
-
-    public int User_ID { get; set; }
-
-    public int? Company_ID { get; set; }
-
-    public int? Student_ID { get; set; }
 }
