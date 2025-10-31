@@ -8,4 +8,10 @@ public class Application
     public string CV { get; set; }
     public string Proposal { get; set; }
     public string Notes { get; set; }
+
+    //Navigation Properties
+    public int StudentId { get; set; }
+    public StudentProfile StudentProfile { get; set; }
+    public int OpportunityId { get; set; }
+    public Opportunity Opportunity { get; set; }
 }

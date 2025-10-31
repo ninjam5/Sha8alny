@@ -10,9 +10,6 @@ public class OpportunityConfiguration : IEntityTypeConfiguration<Opportunity>
     {
         builder.HasKey(o => o.Id);
 
-        builder.Property(o => o.Id)
-               .ValueGeneratedOnAdd();
-
         builder.Property(o => o.Title)
                .IsRequired()
                .HasMaxLength(200);
@@ -45,13 +42,9 @@ public class OpportunityConfiguration : IEntityTypeConfiguration<Opportunity>
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");
 
-        builder.Property(o => o.Library)
-               .HasMaxLength(2000)
-               .HasComment("JSON array of library resources");
-
-        builder.HasIndex(o => o.Type);
-
-        builder.HasIndex(o => o.Deadline);
+        builder.HasOne(o => o.CompletedOpportunity)
+                   .WithOne(co => co.Opportunity)
+                   .HasForeignKey<CompletedOpportunity>(co => co.OpportunityId);
 
         builder.ToTable("Opportunities");
     }

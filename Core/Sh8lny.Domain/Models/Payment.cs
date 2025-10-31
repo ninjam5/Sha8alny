@@ -9,5 +9,14 @@ public class Payment
     public string Method { get; set; }
     public string Status { get; set; }
     public DateTime Paid_At { get; set; }
-    public string Transaction_Id { get; set; }
+    public int Total_Installment { get; set; }
+    public int Installment_Number { get; set; }
+
+    //Navigation Property
+    public int UIdSender { get; set; }
+    public User Sender { get; set; }
+    public int UIdReceiver { get; set; }
+    public User Receiver { get; set; }
+    public int Completed_id { get; set; }
+    public CompletedOpportunity CompletedOpportunity { get; set; } 
 }

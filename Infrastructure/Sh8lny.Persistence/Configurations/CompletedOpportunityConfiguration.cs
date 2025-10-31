@@ -9,34 +9,15 @@ public class CompletedOpportunityConfiguration : IEntityTypeConfiguration<Comple
     public void Configure(EntityTypeBuilder<CompletedOpportunity> builder)
     {
         builder.HasKey(co => co.Id);
+        builder.Property(co => co.ConfirmedByStudent)
+               .IsRequired();
 
-        builder.Property(co => co.Id)
-               .ValueGeneratedOnAdd();
+        builder.Property(co => co.ConfirmedByCompany)
+               .IsRequired();
 
-        builder.Property(co => co.CompletedBy)
-               .IsRequired()
-               .HasMaxLength(100);
-
-        builder.Property(co => co.AcceptedBy)
-               .IsRequired()
-               .HasMaxLength(100);
-
-        builder.Property(co => co.SubmitContains)
-               .HasMaxLength(2000);
-
-    
-        builder.Property(co => co.Payment)
-               .IsRequired()
-               .HasColumnType("decimal(18,2)");
-
-        builder.Property(co => co.Created_At)
-               .IsRequired()
-               .HasDefaultValueSql("GETUTCDATE()");
-
-        builder.HasIndex(co => co.CompletedBy);
-
-        builder.HasIndex(co => co.AcceptedBy);
-
+        builder.Property(co => co.ConfirmedByPayment)
+               .IsRequired();
+        
         builder.ToTable("CompletedOpportunities");
     }
 }

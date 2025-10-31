@@ -10,9 +10,6 @@ public class StudentProfileConfiguration : IEntityTypeConfiguration<StudentProfi
     {
         builder.HasKey(sp => sp.Id);
 
-        builder.Property(sp => sp.Id)
-               .ValueGeneratedOnAdd();
-
         builder.Property(sp => sp.University)
                .IsRequired()
                .HasMaxLength(200);
@@ -21,15 +18,24 @@ public class StudentProfileConfiguration : IEntityTypeConfiguration<StudentProfi
                .IsRequired()
                .HasMaxLength(150);
 
-        builder.Property(sp => sp.GraduationDay)
+        builder.Property(sp => sp.GraduationYear)
                .IsRequired()
                .HasColumnType("date");
 
-  
-        builder.Property(sp => sp.TrainingDays)
-               .HasMaxLength(500)
-               .HasComment("JSON array of training days");
+        builder.HasMany(s => s.Applications)
+                   .WithOne(a => a.StudentProfile)
+                   .HasForeignKey(a => a.StudentId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(sp => sp.StudentSkills)
+                   .WithOne(ss => ss.StudentProfile)
+                   .HasForeignKey(ss => ss.StudentId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(sp => sp.CompletedOpportunities)
+                   .WithOne(co => co.StudentProfile)
+                   .HasForeignKey(co => co.StudentProfileId)
+                   .OnDelete(DeleteBehavior.Restrict);
         builder.ToTable("StudentProfiles");
     }
 }
