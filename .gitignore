@@ -1,0 +1,30 @@
+# Ignore Visual Studio temporary files, build results, and logs
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Tt]estResults/
+[Dd]ebug/
+[Rr]elease/
+
+# Dependency folders
+node_modules/
+packages/
+
+# Environment-specific settings
+appsettings.Development.json
+
+# Others
+*.dbmdl
+*.cache
+*.pdb
+*.exe
+*.dll
+*.tmp
+*.log
