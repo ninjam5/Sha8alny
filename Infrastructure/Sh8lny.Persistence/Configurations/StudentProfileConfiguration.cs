@@ -25,7 +25,7 @@ public class StudentProfileConfiguration : IEntityTypeConfiguration<StudentProfi
         builder.HasMany(s => s.Applications)
                    .WithOne(a => a.StudentProfile)
                    .HasForeignKey(a => a.StudentId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(sp => sp.StudentSkills)
                    .WithOne(ss => ss.StudentProfile)

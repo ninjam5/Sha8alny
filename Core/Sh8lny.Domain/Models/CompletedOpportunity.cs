@@ -10,9 +10,9 @@ public class CompletedOpportunity
 
     //Navigation Properties
     public int StudentProfileId { get; set; }
-    public StudentProfile StudentProfile { get; set; }
+    public StudentProfile StudentProfile { get; set; } = null!;
     public int OpportunityId { get; set; }
-    public Opportunity Opportunity { get; set; }
+    public Opportunity Opportunity { get; set; } = null!;
     public ICollection<Payment> Payments { get; set; } = new HashSet<Payment>();
     public ICollection<Review> Reviews { get; set; } = new HashSet<Review>();
 }
