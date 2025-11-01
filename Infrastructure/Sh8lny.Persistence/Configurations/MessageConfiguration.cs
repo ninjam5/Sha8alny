@@ -10,9 +10,6 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
     {
         builder.HasKey(m => m.Id);
 
-        builder.Property(m => m.Id)
-               .ValueGeneratedOnAdd();
-
         builder.Property(m => m.Content)
                .IsRequired()
                .HasMaxLength(2000);
@@ -21,7 +18,15 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");
 
-        builder.HasIndex(m => m.Created_At);
+        builder.HasOne(m => m.Sender)
+                .WithMany(u => u.SentMessages)
+                .HasForeignKey(m => m.UIdSender)
+                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(m => m.Receiver)
+               .WithMany(u => u.ReceivedMessages)
+               .HasForeignKey(m => m.UIdReceiver)
+               .OnDelete(DeleteBehavior.Restrict);
 
         builder.ToTable("Messages");
     }

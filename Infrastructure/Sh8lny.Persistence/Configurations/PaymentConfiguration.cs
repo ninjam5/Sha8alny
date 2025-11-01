@@ -10,9 +10,6 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
     {
         builder.HasKey(p => p.Id);
 
-        builder.Property(p => p.Id)
-               .ValueGeneratedOnAdd();
-
         builder.Property(p => p.Amount)
                .IsRequired()
                .HasColumnType("decimal(18,2)");
@@ -38,16 +35,20 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");
 
-        builder.Property(p => p.Transaction_Id)
-               .IsRequired()
-               .HasMaxLength(100);
+        builder.HasOne(p => p.Sender)
+                   .WithMany(u => u.SentPayments)
+                   .HasForeignKey(p => p.UIdSender)
+                   .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(p => p.Transaction_Id)
-               .IsUnique();
+        builder.HasOne(p => p.Receiver)
+               .WithMany(u => u.ReceivedPayments)
+               .HasForeignKey(p => p.UIdReceiver)
+               .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(p => p.Status);
-
-        builder.HasIndex(p => p.Paid_At);
+        builder.HasOne(p => p.CompletedOpportunity)
+               .WithMany(co => co.Payments)
+               .HasForeignKey(p => p.Completed_id)
+               .OnDelete(DeleteBehavior.Restrict);
 
         builder.ToTable("Payments");
     }

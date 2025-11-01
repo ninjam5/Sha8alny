@@ -8,16 +8,17 @@ public class StudentSkillConfiguration : IEntityTypeConfiguration<StudentSkill>
 {
     public void Configure(EntityTypeBuilder<StudentSkill> builder)
     {
-        builder.HasKey(ss => ss.Id);
+        builder.HasKey(ss => new { ss.StudentId, ss.SkillId });
 
-        builder.Property(ss => ss.Id)
-               .ValueGeneratedOnAdd();
+        builder.HasOne(ss => ss.StudentProfile)
+               .WithMany(sp => sp.StudentSkills)
+               .HasForeignKey(ss => ss.StudentId)
+               .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(ss => ss.SkillName)
-               .IsRequired()
-               .HasMaxLength(100);
-
-        builder.HasIndex(ss => ss.SkillName);
+        builder.HasOne(ss => ss.Skill)
+               .WithMany(s => s.StudentSkills)
+               .HasForeignKey(ss => ss.SkillId)
+               .OnDelete(DeleteBehavior.Cascade);
 
         builder.ToTable("StudentSkills");
     }

@@ -10,9 +10,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.HasKey(u => u.Id);
 
-        builder.Property(u => u.Id)
-               .ValueGeneratedOnAdd();
-
         builder.Property(u => u.Name)
                .IsRequired()
                .HasMaxLength(100);
@@ -20,9 +17,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Email)
                .IsRequired()
                .HasMaxLength(255);
-
-        builder.HasIndex(u => u.Email)
-               .IsUnique();
 
         builder.Property(u => u.Password)
                .IsRequired()
@@ -44,6 +38,19 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Created_At)
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");
+        builder.HasOne(u=>u.StudentProfile)
+            .WithOne(s=>s.User)
+            .HasForeignKey<StudentProfile>(s=>s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(u => u.CompanyProfile)
+            .WithOne(s => s.User)
+            .HasForeignKey<CompanyProfile>(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(u => u.Notification)
+                   .WithOne(n => n.User)
+                   .HasForeignKey(n => n.UId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
         builder.ToTable("Users");
     }

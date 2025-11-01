@@ -10,19 +10,14 @@ public class CompanyProfileConfiguration : IEntityTypeConfiguration<CompanyProfi
     {
         builder.HasKey(cp => cp.Id);
 
-        builder.Property(cp => cp.Id)
-               .ValueGeneratedOnAdd();
-
-        builder.Property(cp => cp.WebSite)
-               .HasMaxLength(255);
-
         builder.Property(cp => cp.Industry)
                .IsRequired()
                .HasMaxLength(100);
 
-        builder.Property(cp => cp.Location)
-               .IsRequired()
-               .HasMaxLength(200);
+        builder.HasMany(c => c.Opportunities)
+                   .WithOne(o => o.CompanyProfile)
+                   .HasForeignKey(o => o.CompanyProfileId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
         builder.ToTable("CompanyProfiles");
     }

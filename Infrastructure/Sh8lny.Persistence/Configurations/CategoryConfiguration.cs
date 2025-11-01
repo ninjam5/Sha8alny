@@ -10,22 +10,18 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
     {
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Id)
-               .ValueGeneratedOnAdd();
-
         builder.Property(c => c.Name)
                .IsRequired()
                .HasMaxLength(100);
 
-        builder.HasIndex(c => c.Name)
-               .IsUnique();
-
-        builder.Property(c => c.Icon_URL)
-               .HasMaxLength(500);
-
         builder.Property(c => c.Created_At)
                .IsRequired()
                .HasDefaultValueSql("GETUTCDATE()");
+
+        builder.HasMany(c => c.Opportunities)
+                   .WithOne(o => o.Category)
+                   .HasForeignKey(o => o.CategoryId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
         builder.ToTable("Categories");
     }

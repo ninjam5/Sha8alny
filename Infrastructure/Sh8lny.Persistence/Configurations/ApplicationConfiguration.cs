@@ -11,12 +11,6 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
         
         builder.HasKey(a => a.Id);
 
-        
-        builder.Property(a => a.Id)
-               .ValueGeneratedOnAdd();
-
-       
-        
         builder.Property(a => a.Status)
                .IsRequired()
                .HasMaxLength(50)
@@ -27,18 +21,20 @@ public class ApplicationConfiguration : IEntityTypeConfiguration<Application>
                .HasDefaultValueSql("GETUTCDATE()");
 
         builder.Property(a => a.CV)
+               .IsRequired()
                .HasMaxLength(500);
 
         builder.Property(a => a.Proposal)
+                .IsRequired()
                .HasMaxLength(2000);
 
         builder.Property(a => a.Notes)
                .HasMaxLength(1000);
 
-        builder.HasIndex(a => a.Status);
-
-        builder.HasIndex(a => a.Created_At);
-
+        builder.HasOne(a => a.Opportunity)
+                .WithMany(o => o.Applications)
+                .HasForeignKey(a => a.OpportunityId)
+                .OnDelete(DeleteBehavior.Cascade);
         builder.ToTable("Applications");
     }
 }
