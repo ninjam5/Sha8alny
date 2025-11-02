@@ -1,15 +1,18 @@
 namespace Sh8lny.Domain.Models;
 
+// Student application to an opportunity
 public class Application
 {
     public int Id { get; set; }
-    public required string Status { get; set; }
+    
+    // Application details
+    public required string Status { get; set; } // e.g., "Pending", "Accepted", "Rejected"
     public DateTime Created_At { get; set; }
-    public string? CV { get; set; }
-    public string? Proposal { get; set; }
-    public string? Notes { get; set; }
+    public required string CV { get; set; }
+    public required string Proposal { get; set; }
+    public required string Notes { get; set; }
 
-    //Navigation Properties
+    // Foreign key relationships
     public int StudentId { get; set; }
     public StudentProfile StudentProfile { get; set; } = null!;
     public int OpportunityId { get; set; }

@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Sh8lny.Domain.Models;
 
-namespace Sh8lny.Domain.Models
+// Master catalog of available skills
+public class Skill
 {
-    public class Skill
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
+    public int Id { get; set; }
+    public required string Name { get; set; }
 
-        //Navigation Property
-        public ICollection<StudentSkill> StudentSkills { get; set; } = new HashSet<StudentSkill>();
-    }
+    // Many-to-many relationship with students
+    public ICollection<StudentSkill> StudentSkills { get; set; } = new HashSet<StudentSkill>();
 }
