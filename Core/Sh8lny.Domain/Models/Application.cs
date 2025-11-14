@@ -1,20 +1,63 @@
 namespace Sh8lny.Domain.Models;
 
-// Student application to an opportunity
+/// <summary>
+/// Application entity for student project applications
+/// </summary>
 public class Application
 {
-    public int Id { get; set; }
-    
-    // Application details
-    public required string Status { get; set; } // e.g., "Pending", "Accepted", "Rejected"
-    public DateTime Created_At { get; set; }
-    public required string CV { get; set; }
-    public required string Proposal { get; set; }
-    public required string Notes { get; set; }
+    // Primary key
+    public int ApplicationID { get; set; }
 
-    // Foreign key relationships
-    public int StudentId { get; set; }
-    public StudentProfile StudentProfile { get; set; } = null!;
-    public int OpportunityId { get; set; }
-    public Opportunity Opportunity { get; set; } = null!;
+    // Foreign keys
+    public int ProjectID { get; set; }
+    public int StudentID { get; set; }
+
+    // Application details
+    public string? CoverLetter { get; set; }
+    public required string Resume { get; set; }
+    public string? PortfolioURL { get; set; }
+    public string? ProposalDocument { get; set; }
+
+    // Status tracking
+     public ApplicationStatus Status { get; set; }
+    //public TimePreference? TimePreference { get; set; }
+
+    // Review info
+
+    public int? ReviewedBy { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+    public string? ReviewNotes { get; set; }
+     
+
+    // Timestamps
+    public DateTime AppliedAt { get; set; }
+    //public DateTime UpdatedAt { get; set; }
+
+    // Navigation properties
+    public Project Project { get; set; } = null!;
+    public Student Student { get; set; } = null!;
+    //public User? Reviewer { get; set; }
+    public CompletedOpportunity? CompletedOpportunity { get; set; }
 }
+
+/// <summary>
+/// Application status enumeration
+/// </summary>
+public enum ApplicationStatus
+{
+    Submit,
+    Pending,
+    UnderReview,
+    Accepted,
+    Rejected,
+    Withdrawn
+}
+
+
+
+
+/// <summary>
+/// Time preference enumeration (from Figma mobile UI)
+/// </summary>
+// public enum TimePreference
+//{    AM,PM,Flexible}

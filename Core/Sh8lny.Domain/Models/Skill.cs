@@ -1,11 +1,41 @@
-﻿namespace Sh8lny.Domain.Models;
+namespace Sh8lny.Domain.Models;
 
-// Master catalog of available skills
+/// <summary>
+/// Skills master entity
+/// </summary>
 public class Skill
 {
-    public int Id { get; set; }
-    public required string Name { get; set; }
+    // Primary key
+    public int SkillID { get; set; }
 
-    // Many-to-many relationship with students
-    public ICollection<StudentSkill> StudentSkills { get; set; } = new HashSet<StudentSkill>();
+    // Skill details
+    public required string SkillName { get; set; }
+    public SkillCategory? SkillCategory { get; set; }
+    public string? Description { get; set; }
+    public bool IsActive { get; set; }
+
+    // Timestamp
+    public DateTime CreatedAt { get; set; }
+
+    // Collections
+    public ICollection<StudentSkill> StudentSkills { get; set; } = new List<StudentSkill>();
+    public ICollection<ProjectRequiredSkill> ProjectRequiredSkills { get; set; } = new List<ProjectRequiredSkill>();
+}
+
+/// <summary>
+/// Skill category enumeration
+/// </summary>
+public enum SkillCategory
+{
+    Backend,
+    Frontend,
+    UIUX,
+    Mobile,
+    AIML,
+    Data,
+    Testing,
+    Marketing,
+    Design,
+    Security,
+    Other
 }

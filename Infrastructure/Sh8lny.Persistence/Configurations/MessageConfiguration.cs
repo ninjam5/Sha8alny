@@ -4,32 +4,62 @@ using Sh8lny.Domain.Models;
 
 namespace Sh8lny.Persistence.Configurations;
 
-// Fluent API configuration for Message entity
+/// <summary>
+/// Fluent API configuration for Message entity
+/// </summary>
 public class MessageConfiguration : IEntityTypeConfiguration<Message>
 {
     public void Configure(EntityTypeBuilder<Message> builder)
     {
-        // Primary key
-        builder.HasKey(m => m.Id);
-
-        // Required properties with max lengths
-        builder.Property(m => m.Content).IsRequired().HasMaxLength(2000);
-
-        // Timestamp with database default
-        builder.Property(m => m.Created_At).IsRequired().HasDefaultValueSql("GETUTCDATE()");
-
-        // Sender relationship (RESTRICT to preserve user data)
-        builder.HasOne(m => m.Sender)
-               .WithMany(u => u.SentMessages)
-               .HasForeignKey(m => m.UIdSender)
-               .OnDelete(DeleteBehavior.Restrict);
-
-        // Receiver relationship (RESTRICT to preserve user data)
-        builder.HasOne(m => m.Receiver)
-               .WithMany(u => u.ReceivedMessages)
-               .HasForeignKey(m => m.UIdReceiver)
-               .OnDelete(DeleteBehavior.Restrict);
-
+        // Table mapping
         builder.ToTable("Messages");
+
+        // Primary key
+        builder.HasKey(m => m.MessageID);
+
+        // Properties
+        builder.Property(m => m.MessageText)
+            .IsRequired()
+            .HasMaxLength(4000);
+
+        builder.Property(m => m.MessageType)
+            .IsRequired()
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(MessageType.Text);
+
+        builder.Property(m => m.AttachmentURL)
+            .HasMaxLength(500);
+
+        builder.Property(m => m.AttachmentName)
+            .HasMaxLength(200);
+
+        builder.Property(m => m.IsRead)
+            .HasDefaultValue(false);
+
+        builder.Property(m => m.IsEdited)
+            .HasDefaultValue(false);
+
+        builder.Property(m => m.SentAt)
+            .HasDefaultValueSql("GETDATE()");
+
+        // Indexes
+        builder.HasIndex(m => m.ConversationID)
+            .HasDatabaseName("IDX_Messages_ConversationID");
+
+        builder.HasIndex(m => m.SenderID)
+            .HasDatabaseName("IDX_Messages_SenderID");
+
+        builder.HasIndex(m => m.SentAt)
+            .HasDatabaseName("IDX_Messages_SentAt");
+
+        builder.HasIndex(m => m.IsRead)
+            .HasDatabaseName("IDX_Messages_IsRead");
+
+        // Relationships
+        builder.HasOne(m => m.Conversation)
+            .WithMany(c => c.Messages)
+            .HasForeignKey(m => m.ConversationID)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
