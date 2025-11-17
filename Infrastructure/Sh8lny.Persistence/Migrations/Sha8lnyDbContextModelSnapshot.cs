@@ -22,7 +22,7 @@ namespace Sh8lny.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ActivityLog", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ActivityLog", b =>
                 {
                     b.Property<int>("LogID")
                         .ValueGeneratedOnAdd()
@@ -79,7 +79,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("ActivityLog", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Application", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Application", b =>
                 {
                     b.Property<int>("ApplicationID")
                         .ValueGeneratedOnAdd()
@@ -152,7 +152,40 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Applications", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Certificate", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ApplicationModuleProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("ProjectModuleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectModuleId");
+
+                    b.HasIndex("ApplicationId", "ProjectModuleId")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_ApplicationModuleProgress");
+
+                    b.ToTable("ApplicationModuleProgress", (string)null);
+                });
+
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Certificate", b =>
                 {
                     b.Property<int>("CertificateID")
                         .ValueGeneratedOnAdd()
@@ -213,7 +246,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Certificates", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Company", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Company", b =>
                 {
                     b.Property<int>("CompanyID")
                         .ValueGeneratedOnAdd()
@@ -301,7 +334,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Companies", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.CompanyReview", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.CompanyReview", b =>
                 {
                     b.Property<int>("ReviewID")
                         .ValueGeneratedOnAdd()
@@ -417,7 +450,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("CompanyReviews", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.CompletedOpportunity", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.CompletedOpportunity", b =>
                 {
                     b.Property<int>("CompletedOpportunityID")
                         .ValueGeneratedOnAdd()
@@ -556,7 +589,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("CompletedOpportunities", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Conversation", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Conversation", b =>
                 {
                     b.Property<int>("ConversationID")
                         .ValueGeneratedOnAdd()
@@ -603,7 +636,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Conversations", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ConversationParticipant", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ConversationParticipant", b =>
                 {
                     b.Property<int>("ParticipantID")
                         .ValueGeneratedOnAdd()
@@ -640,7 +673,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("ConversationParticipants", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.DashboardMetric", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.DashboardMetric", b =>
                 {
                     b.Property<int>("MetricID")
                         .ValueGeneratedOnAdd()
@@ -702,7 +735,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("DashboardMetrics", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Department", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Department", b =>
                 {
                     b.Property<int>("DepartmentID")
                         .ValueGeneratedOnAdd()
@@ -743,7 +776,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Departments", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.GroupMember", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.GroupMember", b =>
                 {
                     b.Property<int>("GroupMemberID")
                         .ValueGeneratedOnAdd()
@@ -781,7 +814,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("GroupMembers", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Message", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Message", b =>
                 {
                     b.Property<int>("MessageID")
                         .ValueGeneratedOnAdd()
@@ -850,7 +883,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Messages", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Notification", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Notification", b =>
                 {
                     b.Property<int>("NotificationID")
                         .ValueGeneratedOnAdd()
@@ -916,7 +949,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Notifications", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Payment", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Payment", b =>
                 {
                     b.Property<int>("PaymentID")
                         .ValueGeneratedOnAdd()
@@ -1010,7 +1043,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Payments", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Project", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Project", b =>
                 {
                     b.Property<int>("ProjectID")
                         .ValueGeneratedOnAdd()
@@ -1126,7 +1159,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Projects", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ProjectGroup", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectGroup", b =>
                 {
                     b.Property<int>("GroupID")
                         .ValueGeneratedOnAdd()
@@ -1162,7 +1195,42 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("ProjectGroups", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ProjectRequiredSkill", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectModule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("EstimatedDuration")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "OrderIndex")
+                        .HasDatabaseName("IDX_ProjectModules_Project_Order");
+
+                    b.ToTable("ProjectModules", (string)null);
+                });
+
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectRequiredSkill", b =>
                 {
                     b.Property<int>("ProjectSkillID")
                         .ValueGeneratedOnAdd()
@@ -1201,7 +1269,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("ProjectRequiredSkills", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Skill", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Skill", b =>
                 {
                     b.Property<int>("SkillID")
                         .ValueGeneratedOnAdd()
@@ -1353,7 +1421,7 @@ namespace Sh8lny.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Student", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Student", b =>
                 {
                     b.Property<int>("StudentID")
                         .ValueGeneratedOnAdd()
@@ -1464,7 +1532,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Students", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.StudentReview", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.StudentReview", b =>
                 {
                     b.Property<int>("ReviewID")
                         .ValueGeneratedOnAdd()
@@ -1583,7 +1651,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("StudentReviews", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.StudentSkill", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.StudentSkill", b =>
                 {
                     b.Property<int>("StudentSkillID")
                         .ValueGeneratedOnAdd()
@@ -1621,7 +1689,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("StudentSkills", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.University", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.University", b =>
                 {
                     b.Property<int>("UniversityID")
                         .ValueGeneratedOnAdd()
@@ -1696,7 +1764,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Universities", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.User", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.User", b =>
                 {
                     b.Property<int>("UserID")
                         .ValueGeneratedOnAdd()
@@ -1714,6 +1782,9 @@ namespace Sh8lny.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsEmailVerified")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -1721,6 +1792,9 @@ namespace Sh8lny.Persistence.Migrations
 
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1756,7 +1830,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.UserSettings", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.UserSettings", b =>
                 {
                     b.Property<int>("SettingID")
                         .ValueGeneratedOnAdd()
@@ -1822,24 +1896,24 @@ namespace Sh8lny.Persistence.Migrations
                     b.ToTable("UserSettings", (string)null);
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ActivityLog", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ActivityLog", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.User", "User")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Application", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Application", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Project", "Project")
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
                         .WithMany("Applications")
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("Applications")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1850,21 +1924,40 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Certificate", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ApplicationModuleProgress", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Company", "Company")
+                    b.HasOne("Sh8lny.Domain.Entities.Application", "Application")
+                        .WithMany("ModuleProgress")
+                        .HasForeignKey("ApplicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sh8lny.Domain.Entities.ProjectModule", "ProjectModule")
+                        .WithMany("ModuleProgress")
+                        .HasForeignKey("ProjectModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Application");
+
+                    b.Navigation("ProjectModule");
+                });
+
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Certificate", b =>
+                {
+                    b.HasOne("Sh8lny.Domain.Entities.Company", "Company")
                         .WithMany("IssuedCertificates")
                         .HasForeignKey("CompanyID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Project", "Project")
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
                         .WithMany("Certificates")
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("Certificates")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1877,31 +1970,31 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Company", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Company", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.User", "User")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "User")
                         .WithOne("Company")
-                        .HasForeignKey("Sh8lny.Domain.Models.Company", "UserID")
+                        .HasForeignKey("Sh8lny.Domain.Entities.Company", "UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.CompanyReview", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.CompanyReview", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Company", "Company")
+                    b.HasOne("Sh8lny.Domain.Entities.Company", "Company")
                         .WithMany("Reviews")
                         .HasForeignKey("CompanyID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.CompletedOpportunity", "CompletedOpportunity")
+                    b.HasOne("Sh8lny.Domain.Entities.CompletedOpportunity", "CompletedOpportunity")
                         .WithOne("CompanyReview")
-                        .HasForeignKey("Sh8lny.Domain.Models.CompanyReview", "CompletedOpportunityID")
+                        .HasForeignKey("Sh8lny.Domain.Entities.CompanyReview", "CompletedOpportunityID")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("CompanyReviews")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1914,31 +2007,31 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.CompletedOpportunity", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.CompletedOpportunity", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Application", "Application")
+                    b.HasOne("Sh8lny.Domain.Entities.Application", "Application")
                         .WithOne("CompletedOpportunity")
-                        .HasForeignKey("Sh8lny.Domain.Models.CompletedOpportunity", "ApplicationID")
+                        .HasForeignKey("Sh8lny.Domain.Entities.CompletedOpportunity", "ApplicationID")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Sh8lny.Domain.Models.Certificate", "Certificate")
+                    b.HasOne("Sh8lny.Domain.Entities.Certificate", "Certificate")
                         .WithOne("CompletedOpportunity")
-                        .HasForeignKey("Sh8lny.Domain.Models.CompletedOpportunity", "CertificateID")
+                        .HasForeignKey("Sh8lny.Domain.Entities.CompletedOpportunity", "CertificateID")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Sh8lny.Domain.Models.Project", "Project")
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
                         .WithMany("CompletedOpportunities")
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("CompletedOpportunities")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.User", "Verifier")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "Verifier")
                         .WithMany("VerifiedOpportunities")
                         .HasForeignKey("VerifiedBy")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -1954,14 +2047,14 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Verifier");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Conversation", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Conversation", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.ProjectGroup", "Group")
+                    b.HasOne("Sh8lny.Domain.Entities.ProjectGroup", "Group")
                         .WithMany("Conversations")
                         .HasForeignKey("GroupID")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("Sh8lny.Domain.Models.Project", "Project")
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
                         .WithMany("Conversations")
                         .HasForeignKey("ProjectID");
 
@@ -1970,15 +2063,15 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ConversationParticipant", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ConversationParticipant", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Conversation", "Conversation")
+                    b.HasOne("Sh8lny.Domain.Entities.Conversation", "Conversation")
                         .WithMany("Participants")
                         .HasForeignKey("ConversationID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.User", "User")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "User")
                         .WithMany("ConversationParticipants")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1989,35 +2082,35 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.DashboardMetric", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.DashboardMetric", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Company", null)
+                    b.HasOne("Sh8lny.Domain.Entities.Company", null)
                         .WithMany("DashboardMetrics")
                         .HasForeignKey("CompanyID");
 
-                    b.HasOne("Sh8lny.Domain.Models.University", null)
+                    b.HasOne("Sh8lny.Domain.Entities.University", null)
                         .WithMany("DashboardMetrics")
                         .HasForeignKey("UniversityID");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Department", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Department", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.University", null)
+                    b.HasOne("Sh8lny.Domain.Entities.University", null)
                         .WithMany("Departments")
                         .HasForeignKey("UniversityID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.GroupMember", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.GroupMember", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.ProjectGroup", "ProjectGroup")
+                    b.HasOne("Sh8lny.Domain.Entities.ProjectGroup", "ProjectGroup")
                         .WithMany("GroupMembers")
                         .HasForeignKey("GroupID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("GroupMemberships")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2028,15 +2121,15 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Message", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Message", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Conversation", "Conversation")
+                    b.HasOne("Sh8lny.Domain.Entities.Conversation", "Conversation")
                         .WithMany("Messages")
                         .HasForeignKey("ConversationID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.User", "Sender")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "Sender")
                         .WithMany("SentMessages")
                         .HasForeignKey("SenderID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2047,9 +2140,9 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Sender");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Notification", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Notification", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.User", "User")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2058,20 +2151,20 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Payment", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Payment", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Company", "Company")
+                    b.HasOne("Sh8lny.Domain.Entities.Company", "Company")
                         .WithMany("Payments")
                         .HasForeignKey("CompanyID")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Sh8lny.Domain.Models.Project", "Project")
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
                         .WithMany("Payments")
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("Payments")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2084,9 +2177,9 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Project", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Project", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Company", "Company")
+                    b.HasOne("Sh8lny.Domain.Entities.Company", "Company")
                         .WithMany("Projects")
                         .HasForeignKey("CompanyID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2095,9 +2188,9 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ProjectGroup", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectGroup", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Project", "Project")
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
                         .WithMany("ProjectGroups")
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2106,15 +2199,26 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ProjectRequiredSkill", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectModule", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Project", "Project")
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
+                        .WithMany("Modules")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectRequiredSkill", b =>
+                {
+                    b.HasOne("Sh8lny.Domain.Entities.Project", "Project")
                         .WithMany("ProjectRequiredSkills")
                         .HasForeignKey("ProjectID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Skill", "Skill")
+                    b.HasOne("Sh8lny.Domain.Entities.Skill", "Skill")
                         .WithMany("ProjectRequiredSkills")
                         .HasForeignKey("SkillID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2125,21 +2229,21 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Skill");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Student", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Student", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Department", "Department")
+                    b.HasOne("Sh8lny.Domain.Entities.Department", "Department")
                         .WithMany("Students")
                         .HasForeignKey("DepartmentID")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("Sh8lny.Domain.Models.University", "University")
+                    b.HasOne("Sh8lny.Domain.Entities.University", "University")
                         .WithMany("Students")
                         .HasForeignKey("UniversityID")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("Sh8lny.Domain.Models.User", "User")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "User")
                         .WithOne("Student")
-                        .HasForeignKey("Sh8lny.Domain.Models.Student", "UserID")
+                        .HasForeignKey("Sh8lny.Domain.Entities.Student", "UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2150,20 +2254,20 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.StudentReview", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.StudentReview", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Company", "Company")
+                    b.HasOne("Sh8lny.Domain.Entities.Company", "Company")
                         .WithMany("StudentReviews")
                         .HasForeignKey("CompanyID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.CompletedOpportunity", "CompletedOpportunity")
+                    b.HasOne("Sh8lny.Domain.Entities.CompletedOpportunity", "CompletedOpportunity")
                         .WithOne("StudentReview")
-                        .HasForeignKey("Sh8lny.Domain.Models.StudentReview", "CompletedOpportunityID")
+                        .HasForeignKey("Sh8lny.Domain.Entities.StudentReview", "CompletedOpportunityID")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("ReceivedReviews")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2176,15 +2280,15 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.StudentSkill", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.StudentSkill", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.Skill", "Skill")
+                    b.HasOne("Sh8lny.Domain.Entities.Skill", "Skill")
                         .WithMany("StudentSkills")
                         .HasForeignKey("SkillID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Sh8lny.Domain.Models.Student", "Student")
+                    b.HasOne("Sh8lny.Domain.Entities.Student", "Student")
                         .WithMany("StudentSkills")
                         .HasForeignKey("StudentID")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2195,37 +2299,39 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Student");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.University", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.University", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.User", "User")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserID");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.UserSettings", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.UserSettings", b =>
                 {
-                    b.HasOne("Sh8lny.Domain.Models.User", "User")
+                    b.HasOne("Sh8lny.Domain.Entities.User", "User")
                         .WithOne("Settings")
-                        .HasForeignKey("Sh8lny.Domain.Models.UserSettings", "UserID")
+                        .HasForeignKey("Sh8lny.Domain.Entities.UserSettings", "UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Application", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Application", b =>
+                {
+                    b.Navigation("CompletedOpportunity");
+
+                    b.Navigation("ModuleProgress");
+                });
+
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Certificate", b =>
                 {
                     b.Navigation("CompletedOpportunity");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Certificate", b =>
-                {
-                    b.Navigation("CompletedOpportunity");
-                });
-
-            modelBuilder.Entity("Sh8lny.Domain.Models.Company", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Company", b =>
                 {
                     b.Navigation("DashboardMetrics");
 
@@ -2240,26 +2346,26 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("StudentReviews");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.CompletedOpportunity", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.CompletedOpportunity", b =>
                 {
                     b.Navigation("CompanyReview");
 
                     b.Navigation("StudentReview");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Conversation", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Conversation", b =>
                 {
                     b.Navigation("Messages");
 
                     b.Navigation("Participants");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Department", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Department", b =>
                 {
                     b.Navigation("Students");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Project", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Project", b =>
                 {
                     b.Navigation("Applications");
 
@@ -2269,6 +2375,8 @@ namespace Sh8lny.Persistence.Migrations
 
                     b.Navigation("Conversations");
 
+                    b.Navigation("Modules");
+
                     b.Navigation("Payments");
 
                     b.Navigation("ProjectGroups");
@@ -2276,21 +2384,26 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("ProjectRequiredSkills");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.ProjectGroup", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectGroup", b =>
                 {
                     b.Navigation("Conversations");
 
                     b.Navigation("GroupMembers");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Skill", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.ProjectModule", b =>
+                {
+                    b.Navigation("ModuleProgress");
+                });
+
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Skill", b =>
                 {
                     b.Navigation("ProjectRequiredSkills");
 
                     b.Navigation("StudentSkills");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.Student", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.Student", b =>
                 {
                     b.Navigation("Applications");
 
@@ -2309,7 +2422,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("StudentSkills");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.University", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.University", b =>
                 {
                     b.Navigation("DashboardMetrics");
 
@@ -2318,7 +2431,7 @@ namespace Sh8lny.Persistence.Migrations
                     b.Navigation("Students");
                 });
 
-            modelBuilder.Entity("Sh8lny.Domain.Models.User", b =>
+            modelBuilder.Entity("Sh8lny.Domain.Entities.User", b =>
                 {
                     b.Navigation("Company");
 

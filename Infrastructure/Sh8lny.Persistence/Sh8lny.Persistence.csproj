@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Sh8lny.Domain\Sh8lny.Domain.csproj" />
-    <ProjectReference Include="..\..\Core\Sh8lny.Service\Sh8lny.Service.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +17,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

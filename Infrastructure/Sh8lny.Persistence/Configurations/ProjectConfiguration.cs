@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Sh8lny.Domain.Models;
+using Sh8lny.Domain.Entities;
 
 namespace Sh8lny.Persistence.Configurations;
 

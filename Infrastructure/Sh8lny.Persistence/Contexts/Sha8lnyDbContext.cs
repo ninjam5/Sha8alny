@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sh8lny.Persistence.Configurations;
-using Sh8lny.Domain.Models;
+using Sh8lny.Domain.Entities;
 
 namespace Sh8lny.Persistence.Contexts
 {
@@ -29,7 +29,9 @@ namespace Sh8lny.Persistence.Contexts
         // Projects & Applications
         public DbSet<Project> Projects { get; set; } = null!;
         public DbSet<ProjectRequiredSkill> ProjectRequiredSkills { get; set; } = null!;
+        public DbSet<ProjectModule> ProjectModules { get; set; } = null!;
         public DbSet<Application> Applications { get; set; } = null!;
+        public DbSet<ApplicationModuleProgress> ApplicationModuleProgress { get; set; } = null!;
 
         // Teams & Collaboration
         public DbSet<ProjectGroup> ProjectGroups { get; set; } = null!;
@@ -71,7 +73,9 @@ namespace Sh8lny.Persistence.Contexts
             modelBuilder.ApplyConfiguration(new StudentSkillConfiguration());
             modelBuilder.ApplyConfiguration(new ProjectConfiguration());
             modelBuilder.ApplyConfiguration(new ProjectRequiredSkillConfiguration());
+            modelBuilder.ApplyConfiguration(new ProjectModuleConfiguration());
             modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
+            modelBuilder.ApplyConfiguration(new ApplicationModuleProgressConfiguration());
             modelBuilder.ApplyConfiguration(new ProjectGroupConfiguration());
             modelBuilder.ApplyConfiguration(new GroupMemberConfiguration());
             modelBuilder.ApplyConfiguration(new ConversationConfiguration());
@@ -86,6 +90,23 @@ namespace Sh8lny.Persistence.Contexts
             modelBuilder.ApplyConfiguration(new CompletedOpportunityConfiguration());
             modelBuilder.ApplyConfiguration(new CompanyReviewConfiguration());
             modelBuilder.ApplyConfiguration(new StudentReviewConfiguration());
+
+            // Check if using SQLite, and if so, override SQL Server-specific functions
+            if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+            {
+                // Find all properties with GETDATE() and replace with CURRENT_TIMESTAMP
+                foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+                {
+                    foreach (var property in entityType.GetProperties())
+                    {
+                        var defaultValueSql = property.GetDefaultValueSql();
+                        if (defaultValueSql == "GETDATE()")
+                        {
+                            property.SetDefaultValueSql("CURRENT_TIMESTAMP");
+                        }
+                    }
+                }
+            }
 
             // Global query filters (soft delete pattern if needed)
             // modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive);
@@ -130,13 +151,34 @@ namespace Sh8lny.Persistence.Contexts
         private void UpdateTimestamps()
         {
             var entries = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Modified);
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
 
             foreach (var entry in entries)
             {
-                if (entry.Entity.GetType().GetProperty("UpdatedAt") != null)
+                var entityType = entry.Entity.GetType();
+                
+                // Set CreatedAt for newly added entities
+                if (entry.State == EntityState.Added)
                 {
-                    entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
+                    var createdAtProp = entityType.GetProperty("CreatedAt");
+                    if (createdAtProp != null && createdAtProp.PropertyType == typeof(DateTime))
+                    {
+                        var currentValue = createdAtProp.GetValue(entry.Entity);
+                        if (currentValue == null || (DateTime)currentValue == default)
+                        {
+                            entry.Property("CreatedAt").CurrentValue = DateTime.UtcNow;
+                        }
+                    }
+                }
+                
+                // Update UpdatedAt for modified entities
+                if (entry.State == EntityState.Modified)
+                {
+                    var updatedAtProp = entityType.GetProperty("UpdatedAt");
+                    if (updatedAtProp != null && updatedAtProp.PropertyType == typeof(DateTime))
+                    {
+                        entry.Property("UpdatedAt").CurrentValue = DateTime.UtcNow;
+                    }
                 }
             }
         }

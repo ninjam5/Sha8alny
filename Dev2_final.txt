@@ -1,0 +1,126 @@
+Dev2 Backend Architecture Overview
+=================================
+
+Context
+-------
+- **Goal**: Sha8alny connects students with company-run projects, covering profiles, project postings, applications, reviews, messaging, analytics, and user settings.
+- **Tech Stack**: ASP.NET Core 9 Web API, EF Core 9 (SQL Server primary, SQLite for integration tests), JWT auth, Serilog logging, Swagger UI, Bogus-powered test data.
+- **Solutions & Projects**: `Sh8lnySolution.sln` encapsulates Core (Domain + Application), Infrastructure (Persistence), API host (`Sh8lny.Web`), Shared utilities, and integration tests under `Tests/`.
+
+Solution Topology
+-----------------
+- `Core/Sh8lny.Domain`: Entities, enums, repository abstractions, domain exceptions (e.g., `User`, `Student`, `Project`, `ProjectModule`, `ApplicationModuleProgress`, messaging/review aggregates).
+- `Core/Sh8lny.Application`: DTOs per module, service interfaces, use-case implementations, DI extensions, API response wrappers.
+- `Infrastructure/Sh8lny.Persistence`: EF Core context, entity configurations, repositories + Unit of Work, migrations, seeding guidance.
+- `Sh8lny.Web`: ASP.NET Core API host (controllers, middleware, JWT setup, infrastructure services, Serilog bootstrap, configuration).
+- `Sh8lny.Shared`: Currently a placeholder library for future cross-cutting helpers.
+- `Tests/Sh8lny.IntegrationTests`: XCTest-style integration suites exercising controllers against a SQLite-backed test server.
+- `Postman/ReviewsAPI.postman_collection.json`: Shared request collection for manual verification.
+
+Layered Responsibilities
+------------------------
+| Layer | Key Artifacts | Highlights |
+| --- | --- | --- |
+| Domain (`Core/Sh8lny.Domain`) | Entity classes, enums, exceptions, repository contracts | Expresses the full data model (24+ entities) such as identity, education, projects, applications, curriculum modules, messaging, analytics, payments, and reviews. Custom exceptions (`DomainException`, `NotFoundException`, etc.) support consistent error semantics. |
+| Application (`Core/Sh8lny.Application`) | DTOs, `UseCases/*` services, `Interfaces/*`, `Common/ApiResponse` | Encapsulates business logic behind services like `ProjectService`, `ApplicationService`, `MessagingService`, etc. Uses DTO-centric mapping, request validation attributes, and an `ApiResponse<T>` wrapper to normalize controller outputs. |
+| Infrastructure (`Infrastructure/Sh8lny.Persistence`) | `Sha8lnyDbContext`, `Configurations/*.cs`, `Repositories/*.cs`, `UnitOfWork.cs`, migrations | Implements repository + Unit of Work pattern over EF Core. Fluent configurations enforce relationships, indexes, and seed data (skills). `AddPersistenceServices` wires DbContext conditionally (skipping when tests bootstrap SQLite). |
+| Presentation (`Sh8lny.Web`) | Controllers, middleware, Program bootstrap, infrastructure services | Exposes REST endpoints under `api/*`, secures them via `[Authorize]` and JWT, surfaces Swagger, runs global exception handling (RFC 7807), and writes logs via Serilog to console + `Logs/sha8alny-{date}.log`. |
+| Shared & Tooling | `Sh8lny.Shared`, `Documentation/*`, `Postman`, tests | Holds auxiliary docs (e.g., `README.md`, phase summaries), manual testing assets, and integration testing infrastructure.
+
+Domain Model Highlights
+-----------------------
+- **Identity & Profiles**: `User` (with `UserType` enum) anchors authentication; one-to-one links to `Student` and `Company` (plus `UserSettings`). Students carry academic metadata (`AcademicYear`, `StudentStatus`), while companies expose descriptive and rating info.
+- **Education & Skills**: `University`, `Department`, `Skill`, and `StudentSkill` (many-to-many) support discovery. Skills seed automatically inside `Sha8lnyDbContext.SeedData`.
+- **Projects & Curriculum**: `Project` holds metadata, metrics, and `ProjectStatus`; `ProjectModule` defines ordered curriculum units; `ProjectRequiredSkill` lists prerequisites. Projects aggregate `Applications`, `ProjectGroups`, `Conversations`, `Certificates`, etc.
+- **Applications & Progress**: `Application` ties students to projects with `ApplicationStatus` workflow fields and review metadata. `ApplicationModuleProgress` tracks module completion with timestamps, enabling fine-grained progress reporting.
+- **Collaboration & Messaging**: `ProjectGroup`, `GroupMember`, `Conversation`, `ConversationParticipant`, and `Message` support group chats and direct messaging, including unread markers (`MessageRepository.GetUnreadMessagesAsync`).
+- **Reviews & Achievements**: `CompanyReview`, `StudentReview`, `Certificate`, `CompletedOpportunity`, and `DashboardMetric` capture post-engagement insights and analytics.
+- **Operations & Settings**: `Payment`, `Notification`, `ActivityLog`, and `UserSettings` cover monetization, alerts, auditing, and preferences. Domain exceptions (e.g., `UnauthorizedException`, `ValidationException`) let the middleware convert business failures into HTTP Problem Details payloads.
+
+Application Layer Details (`Core/Sh8lny.Application`)
+----------------------------------------------------
+- **Service Interfaces**: Defined under `Interfaces/` (e.g., `IProjectService`, `IApplicationService`, `IMessagingService`, `IReviewService`, `INotificationService`, `IUserSettingsService`). These ensure controllers depend on abstractions.
+- **Use Cases**: Each feature area has a service (e.g., `UseCases/Projects/ProjectService.cs`, `UseCases/Applications/ApplicationService.cs`). They orchestrate repositories through `IUnitOfWork`, perform authorization checks via `ICurrentUserService`, and emit domain events like activity log entries.
+  - *Curriculum management*: `ProjectService.AddModuleAsync`, `.DeleteModuleAsync`, `.ReorderModulesAsync` manipulate `ProjectModule` collections with order preservation and owner checks.
+  - *Progress tracking*: `ApplicationService.ToggleModuleCompletionAsync` verifies the authenticated student owns the application before upserting/removing `ApplicationModuleProgress` rows and returning an `ApplicationProgressDto` snapshot.
+  - *Project discovery*: Filtering, pagination, and search operate entirely server-side, returning `PagedResult<ProjectListDto>` instances.
+  - *Reviews, certificates, notifications, messaging*: Additional services keep modules decoupled yet share the same `ApiResponse` contract.
+- **DTO Catalog**: `DTOs/*` organizes request/response shapes (e.g., `ProjectDtos.cs`, `ApplicationDtos.cs`, `Reviews`, `Notifications`). Data annotations provide server-side validation without external packages.
+- **Common Utilities**: `Common/ApiResponse.cs` offers success/failure factory helpers plus pagination primitives, used across services and controllers for consistent payloads.
+- **DI Extension**: `Extensions/ServiceCollectionExtensions.cs` registers the full set of application services for injection in the API host.
+
+Infrastructure Layer Details (`Infrastructure/Sh8lny.Persistence`)
+------------------------------------------------------------------
+- **DbContext**: `Contexts/Sha8lnyDbContext.cs` declares DbSets for every aggregate, applies configuration classes, auto-seeds skills, and normalizes timestamps (`SaveChanges` overrides set `CreatedAt`/`UpdatedAt`). SQLite-specific adjustments replace `GETDATE()` defaults when integration tests run.
+- **Fluent Configurations**: `Configurations/*.cs` centralize EF Core mapping (keys, relationships, property lengths, indexes). This keeps entities clean and enforces constraints at the database level.
+- **Repository Pattern**:
+  - `Repositories/GenericRepository.cs` (not shown above but present) implements `IGenericRepository<T>` for CRUD, filtering, and pagination.
+  - `Repositories/RepositoryImplementations.cs` houses concrete repos (e.g., `ProjectRepository`, `NotificationRepository`) offering domain-specific queries like `GetActiveProjectsAsync`.
+  - `Repositories/UnitOfWork.cs` instantiates repositories lazily and exposes transactional helpers (`BeginTransactionAsync`, `CommitTransactionAsync`, `RollbackTransactionAsync`).
+- **DI Bridge**: `Extensions/ServiceCollectionExtensions.cs` wires SQL Server DbContext + UnitOfWork and skips DbContext registration when `environment == "Testing"`, letting the test factory own the provider.
+- **Migrations & Seeders**: `Migrations/` stores schema history (latest includes curriculum tables). `Seeders/README.md` documents the strategy for richer seed data (skills already seeded in DbContext; other entities pending implementation).
+
+Presentation Layer Details (`Sh8lny.Web`)
+----------------------------------------
+- **Program & Hosting** (`Program.cs`):
+  - Bootstraps Serilog with enriched metadata, console + rolling file sinks.
+  - Adds controllers, Swagger (with XML comments + JWT auth header support), persistence/application/infrastructure services, CORS policy `AllowAll`, JWT authentication/authorization, and `UseGlobalExceptionHandler` middleware.
+  - Exposes Swagger UI at root during Development and enforces HTTPS redirection.
+- **Middleware** (`Middleware/GlobalExceptionHandler.cs`): Converts exceptions (including domain-specific ones) into RFC 7807 `ProblemDetails` JSON, embedding correlation IDs and stack traces (in dev) while logging via `ILogger`.
+- **Infrastructure Services** (`Services/TokenService.cs`, `EmailService.cs`, `CurrentUserService.cs`):
+  - `TokenService` issues/validates JWTs using configuration-driven secrets, issuers, and audiences.
+  - `EmailService` currently logs templated HTML messages (verification, password reset, application status) with placeholders for SendGrid/SMTP wiring.
+  - `CurrentUserService` abstracts claims access for use-case services.
+- **Controllers** (`Controllers/*.cs`): REST endpoints grouped by domain (Auth, Students, Companies, Projects, Applications, ActivityLogs, Certificates, DashboardMetrics, Messaging, Notifications, Reviews, UserSettings). Controllers are thin, delegating to services and returning `ApiResponse<T>` objects. New curriculum endpoints (`ProjectsController.AddModule`, `.ReorderModules`, `.DeleteModule`) and student progress endpoint (`ApplicationsController.ToggleModuleCompletion`) enforce `[Authorize(Roles=...)]` to gate operations.
+- **Configuration**: `appsettings.json` carries SQL Server connection strings, JWT defaults, and logging levels; `appsettings.Development.json` adds verbose EF logging plus email/application settings (base URLs, Swagger toggle, upload limits). Environment-specific settings should override secrets via environment variables in production.
+
+Cross-Cutting Concerns
+----------------------
+- **Authentication & Authorization**: JWT bearer tokens configured in `Program.cs`; `TokenService` builds claims for userId/email/role, and integration tests mirror secrets via `JwtTokenHelper`. Role-based `[Authorize(Roles="Student")]` etc. secure write operations.
+- **Error Handling**: Domain/service methods return structured failures; middleware ensures HTTP Problem Details payloads and consistent logging/correlation identifiers.
+- **Logging & Telemetry**: Serilog levels default to Information, with Microsoft namespaces suppressed to Warning. Logs land in `Logs/sha8alny-{date}.log` plus console trace.
+- **Configuration Management**: Supports environment overrides via `builder.Configuration`; secrets should move to `UserSecrets`/KeyVault before production. Development config enables EF command logging and optional database seeding flags.
+- **Validation**: Primarily via data annotations on DTOs; controllers rely on `[ApiController]` automatic model-state validation.
+- **Response Shape**: `ApiResponse<T>` + `PagedResult<T>` standardize success/error contracts across modules, simplifying API clients.
+
+Testing & Tooling
+-----------------
+- **Integration Tests** (`Tests/Sh8lny.IntegrationTests`):
+  - `Fixtures/CustomWebApplicationFactory.cs` spins up the API with a shared SQLite connection (`Cache=Shared`, WAL mode) and environment="Testing" for deterministic runs.
+  - Controllers folder contains suites like `ProjectCurriculumTests.cs` (exercise module CRUD + student progress), `ReviewsController*Tests.cs`, `NotificationsControllerTests.cs`, etc.
+  - `Helpers/TestDataGenerator.cs` leverages Bogus to seed realistic entities (users, students, companies, reviews) and includes a simple SHA256 password helper. `JwtTokenHelper.cs` issues tokens aligned with the real JWT signing key.
+- **Documentation & Checklists**: Files such as `PHASE6_COMPLETION.md`, `ACTIVITY_LOGGING_INTEGRATION.md`, and `REFACTORING_PROGRESS.md` capture past milestones and refactoring plans.
+- **Manual Testing**: `Postman/ReviewsAPI.postman_collection.json` provides ready-made requests; update it to reflect any new endpoints (e.g., curriculum APIs) as needed.
+
+Operations & Deployment Notes
+-----------------------------
+- **Migrations**: Run from `Sh8lny.Web` or solution root targeting `Infrastructure/Sh8lny.Persistence` (e.g., `dotnet ef database update --project Infrastructure/Sh8lny.Persistence --startup-project Sh8lny.Web`).
+- **Environments**: Use `ASPNETCORE_ENVIRONMENT=Development/Production/Testing` to toggle Swagger, logging verbosity, and DbContext registration behavior.
+- **Logging Storage**: Ensure `Logs/` exists or is writable in hosting environments; consider shipping logs to centralized sinks for production.
+- **Email Delivery**: `EmailService` currently logs payloads; integrate SendGrid/SMTP by swapping the TODO block with a real client and populating credentials via configuration.
+- **Seeding & Fixtures**: Only skills seed automatically; broader dataset seeding remains a TODO (`Seeders/README.md`). Use `Tests` helpers for ad-hoc local data until seeders mature.
+
+Open Observations & Next Steps
+------------------------------
+1. **Data Seeder Completion**: Implement a comprehensive seeding routine (users, students, companies, sample projects/applications) per `Infrastructure/Sh8lny.Persistence/Seeders/README.md`.
+2. **Email Provider Integration**: Replace logging stubs in `Sh8lny.Web/Services/EmailService.cs` with SendGrid/SMTP and move secrets to configuration.
+3. **Shared Library Usage**: `Sh8lny.Shared` is empty; consider moving cross-cutting helpers (e.g., extensions, constants) here or delete until needed.
+4. **Validation Layer**: `Validators/` folder is empty—decide whether to adopt FluentValidation or keep annotations only and remove the folder.
+5. **Automated Docs**: Expand Postman collections and/or generate OpenAPI client artifacts to keep consumers aligned with curriculum/progress endpoints.
+6. **Monitoring & Metrics**: Serilog is configured locally; production deployments should add sinks (Seq, Application Insights) and consider health checks.
+
+File Reference Quick List
+-------------------------
+- `Core/Sh8lny.Domain/Entities/*.cs`: Canonical domain models (users, profiles, projects, curriculum, messaging, analytics, payments, reviews).
+- `Core/Sh8lny.Domain/Interfaces/Repositories/*.cs`: Repository abstractions + `IUnitOfWork.cs`.
+- `Core/Sh8lny.Application/Common/ApiResponse.cs`: Response envelope & pagination primitives.
+- `Core/Sh8lny.Application/UseCases/Projects/ProjectService.cs`: Project CRUD + curriculum orchestration.
+- `Core/Sh8lny.Application/UseCases/Applications/ApplicationService.cs`: Application workflow + module progress toggling.
+- `Infrastructure/Sh8lny.Persistence/Contexts/Sha8lnyDbContext.cs`: EF Core context with timestamp automation and skill seeding.
+- `Infrastructure/Sh8lny.Persistence/Repositories/UnitOfWork.cs`: Repository factory + transaction manager.
+- `Sh8lny.Web/Program.cs`: Host bootstrap (Serilog, Swagger, CORS, JWT, DI).
+- `Sh8lny.Web/Middleware/GlobalExceptionHandler.cs`: RFC 7807 error responses.
+- `Sh8lny.Web/Controllers/ProjectsController.cs` & `ApplicationsController.cs`: Curriculum and progress endpoints.
+- `Tests/Sh8lny.IntegrationTests/Controllers/ProjectCurriculumTests.cs`: Regression coverage for module CRUD + student progress flows.
+
+End of Dev2 architecture overview.

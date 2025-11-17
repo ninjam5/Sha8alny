@@ -1,0 +1,948 @@
+{
+	"info": {
+		"_postman_id": "review-api-collection-2025",
+		"name": "Sh8lny Reviews API",
+		"description": "Complete Postman collection for Company and Student Reviews API endpoints with sample payloads",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://localhost:7001",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "student_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "company_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "company_review_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "student_review_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Company Reviews",
+			"item": [
+				{
+					"name": "Create Company Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('company_review_id', jsonData.reviewID);",
+									"    pm.test('Review created successfully', function() {",
+									"        pm.expect(jsonData.reviewID).to.be.a('number');",
+									"        pm.expect(jsonData.rating).to.equal(4.5);",
+									"        pm.expect(jsonData.status).to.equal('Pending');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": {{company_id}},\n  \"studentID\": {{student_id}},\n  \"completedOpportunityID\": 1,\n  \"rating\": 4.5,\n  \"reviewTitle\": \"Excellent Internship Experience\",\n  \"reviewText\": \"I had an amazing experience working at this company. The team was supportive, the projects were challenging, and I learned a lot about software development best practices.\",\n  \"workEnvironmentRating\": 5,\n  \"learningOpportunityRating\": 4.5,\n  \"mentorshipRating\": 5,\n  \"compensationRating\": 4,\n  \"communicationRating\": 4.5,\n  \"wouldRecommend\": true,\n  \"pros\": \"Great mentorship, modern tech stack, flexible work hours, friendly team culture\",\n  \"cons\": \"Office location is a bit far from campus\",\n  \"isAnonymous\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Creates a new company review from a student after completing an opportunity"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Anonymous Company Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": 2,\n  \"studentID\": {{student_id}},\n  \"rating\": 3,\n  \"reviewTitle\": \"Average Experience\",\n  \"reviewText\": \"The internship was okay but not great. Limited learning opportunities and poor communication.\",\n  \"workEnvironmentRating\": 3,\n  \"learningOpportunityRating\": 2.5,\n  \"mentorshipRating\": 2,\n  \"compensationRating\": 3.5,\n  \"communicationRating\": 2.5,\n  \"wouldRecommend\": false,\n  \"pros\": \"Good compensation\",\n  \"cons\": \"Poor mentorship, unclear expectations, limited feedback\",\n  \"isAnonymous\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Creates an anonymous company review where student name is hidden"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Company Review By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Review retrieved successfully', function() {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.reviewID).to.be.a('number');",
+									"    pm.expect(jsonData.companyName).to.be.a('string');",
+									"    pm.expect(jsonData.rating).to.be.within(1, 5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/{{company_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "{{company_review_id}}"]
+						},
+						"description": "Retrieves a specific company review by ID (public endpoint)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Company Reviews (Paginated)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Reviews list retrieved', function() {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    if (jsonData.length > 0) {",
+									"        pm.expect(jsonData[0].status).to.equal('Approved');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/by-company/{{company_id}}?page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "by-company", "{{company_id}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Gets paginated list of approved reviews for a company (public endpoint)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Student's Company Reviews",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/by-student/{{student_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "by-student", "{{student_id}}"]
+						},
+						"description": "Gets all company reviews written by a specific student (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Company Review",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{company_review_id}},\n  \"rating\": 5,\n  \"reviewTitle\": \"Outstanding Internship Experience - Updated\",\n  \"reviewText\": \"After completing my internship, I can confidently say this was the best learning experience of my academic career. The company provided excellent mentorship and real-world projects.\",\n  \"workEnvironmentRating\": 5,\n  \"learningOpportunityRating\": 5,\n  \"mentorshipRating\": 5,\n  \"compensationRating\": 4.5,\n  \"communicationRating\": 5,\n  \"wouldRecommend\": true,\n  \"pros\": \"Exceptional mentorship, cutting-edge tech stack, flexible hours, amazing team culture, great compensation\",\n  \"cons\": \"None - exceeded all expectations\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/{{company_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "{{company_review_id}}"]
+						},
+						"description": "Updates an existing company review (only the student who wrote it can update)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Company Review - Partial",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{company_review_id}},\n  \"rating\": 4.8,\n  \"pros\": \"Updated pros: Excellent mentorship, modern technology, supportive environment\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/{{company_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "{{company_review_id}}"]
+						},
+						"description": "Partial update - only updates specified fields"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Company Review",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/{{company_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "{{company_review_id}}"]
+						},
+						"description": "Deletes a company review (only the student who wrote it can delete)"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Company Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{company_review_id}},\n  \"companyResponse\": \"Thank you for your wonderful feedback! We're thrilled to hear that you had such a positive experience during your internship. Your contributions to the team were invaluable, and we appreciate your dedication and enthusiasm. We wish you all the best in your future career!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/{{company_review_id}}/response",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "{{company_review_id}}", "response"]
+						},
+						"description": "Company responds to a review (only approved reviews can receive responses)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Company Review Statistics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Statistics retrieved successfully', function() {",
+									"    pm.response.to.have.status(200);",
+									"    var stats = pm.response.json();",
+									"    pm.expect(stats.totalReviews).to.be.a('number');",
+									"    pm.expect(stats.averageRating).to.be.a('number');",
+									"    pm.expect(stats.recommendationPercentage).to.be.within(0, 100);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/stats/{{company_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "stats", "{{company_id}}"]
+						},
+						"description": "Gets statistical summary of all reviews for a company (public endpoint)"
+					},
+					"response": []
+				}
+			],
+			"description": "All company review endpoints"
+		},
+		{
+			"name": "Student Reviews",
+			"item": [
+				{
+					"name": "Create Student Review",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('student_review_id', jsonData.reviewID);",
+									"    pm.test('Student review created', function() {",
+									"        pm.expect(jsonData.reviewID).to.be.a('number');",
+									"        pm.expect(jsonData.rating).to.equal(4.7);",
+									"        pm.expect(jsonData.status).to.equal('Pending');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentID\": {{student_id}},\n  \"companyID\": {{company_id}},\n  \"completedOpportunityID\": 1,\n  \"rating\": 4.7,\n  \"reviewTitle\": \"Exceptional Performance and Professionalism\",\n  \"reviewText\": \"This student demonstrated outstanding technical skills and professionalism throughout the internship. They quickly adapted to our tech stack, took initiative on projects, and collaborated effectively with the team.\",\n  \"technicalSkillsRating\": 4.8,\n  \"communicationRating\": 4.5,\n  \"professionalismRating\": 5,\n  \"timeManagementRating\": 4.7,\n  \"teamworkRating\": 4.8,\n  \"problemSolvingRating\": 4.6,\n  \"wouldHireAgain\": true,\n  \"strengths\": \"Strong programming skills, excellent problem-solving abilities, proactive communication, team player, quick learner\",\n  \"areasForImprovement\": \"Could work on time estimation for complex tasks\",\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students"]
+						},
+						"description": "Creates a new student review from a company after working together"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Private Student Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentID\": 2,\n  \"companyID\": {{company_id}},\n  \"rating\": 3.5,\n  \"reviewTitle\": \"Good Potential, Needs Development\",\n  \"reviewText\": \"The student showed promise but needs more experience in professional environments. There were some issues with meeting deadlines and communication.\",\n  \"technicalSkillsRating\": 4,\n  \"communicationRating\": 3,\n  \"professionalismRating\": 3.5,\n  \"timeManagementRating\": 2.5,\n  \"teamworkRating\": 3.5,\n  \"problemSolvingRating\": 3.8,\n  \"wouldHireAgain\": false,\n  \"strengths\": \"Good technical foundation, eager to learn\",\n  \"areasForImprovement\": \"Time management, professional communication, meeting deadlines consistently\",\n  \"isPublic\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students"]
+						},
+						"description": "Creates a private student review (visible only to the student, not public)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Student Review By ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Student review retrieved', function() {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.reviewID).to.be.a('number');",
+									"    pm.expect(jsonData.studentName).to.be.a('string');",
+									"    pm.expect(jsonData.companyName).to.be.a('string');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/{{student_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "{{student_review_id}}"]
+						},
+						"description": "Retrieves a specific student review by ID (public endpoint)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Student Reviews (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/by-student/{{student_id}}?page=1&pageSize=10",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "by-student", "{{student_id}}"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Gets paginated list of approved and public reviews for a student (public endpoint)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Company's Student Reviews",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/by-company/{{company_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "by-company", "{{company_id}}"]
+						},
+						"description": "Gets all student reviews written by a specific company (requires authentication)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Student Review",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{student_review_id}},\n  \"rating\": 5,\n  \"reviewTitle\": \"Exceptional Performance - Top Talent\",\n  \"reviewText\": \"After reflection, this student exceeded all our expectations. They demonstrated exceptional growth throughout the internship and delivered outstanding results on all assigned projects.\",\n  \"technicalSkillsRating\": 5,\n  \"communicationRating\": 5,\n  \"professionalismRating\": 5,\n  \"timeManagementRating\": 4.9,\n  \"teamworkRating\": 5,\n  \"problemSolvingRating\": 5,\n  \"wouldHireAgain\": true,\n  \"strengths\": \"Exceptional technical skills, outstanding problem-solving, excellent team collaboration, highly professional, self-motivated\",\n  \"areasForImprovement\": \"None - exemplary performance across all areas\",\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/{{student_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "{{student_review_id}}"]
+						},
+						"description": "Updates an existing student review (only the company who wrote it can update)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Student Review - Make Public",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{student_review_id}},\n  \"isPublic\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/{{student_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "{{student_review_id}}"]
+						},
+						"description": "Changes a private review to public"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Student Review",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/{{student_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "{{student_review_id}}"]
+						},
+						"description": "Deletes a student review (only the company who wrote it can delete)"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Student Response",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{student_review_id}},\n  \"studentResponse\": \"Thank you so much for this thoughtful feedback! I truly enjoyed working with your team and learned so much during my time at the company. The experience has been invaluable for my professional growth, and I'm grateful for the opportunity to contribute to your projects.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/{{student_review_id}}/response",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "{{student_review_id}}", "response"]
+						},
+						"description": "Student responds to a review (only approved reviews can receive responses)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Student Review Statistics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Statistics retrieved successfully', function() {",
+									"    pm.response.to.have.status(200);",
+									"    var stats = pm.response.json();",
+									"    pm.expect(stats.totalReviews).to.be.a('number');",
+									"    pm.expect(stats.averageRating).to.be.a('number');",
+									"    pm.expect(stats.recommendationPercentage).to.be.within(0, 100);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/students/stats/{{student_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "students", "stats", "{{student_id}}"]
+						},
+						"description": "Gets statistical summary of all public reviews for a student (public endpoint)"
+					},
+					"response": []
+				}
+			],
+			"description": "All student review endpoints"
+		},
+		{
+			"name": "Review Moderation",
+			"item": [
+				{
+					"name": "Approve Company Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/{{company_review_id}}/approve?reviewType=company",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "{{company_review_id}}", "approve"],
+							"query": [
+								{
+									"key": "reviewType",
+									"value": "company"
+								}
+							]
+						},
+						"description": "Admin approves a pending company review (Admin role required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Student Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/{{student_review_id}}/approve?reviewType=student",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "{{student_review_id}}", "approve"],
+							"query": [
+								{
+									"key": "reviewType",
+									"value": "student"
+								}
+							]
+						},
+						"description": "Admin approves a pending student review (Admin role required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Company Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/{{company_review_id}}/reject?reviewType=company",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "{{company_review_id}}", "reject"],
+							"query": [
+								{
+									"key": "reviewType",
+									"value": "company"
+								}
+							]
+						},
+						"description": "Admin rejects an inappropriate company review (Admin role required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Student Review",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/{{student_review_id}}/reject?reviewType=student",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "{{student_review_id}}", "reject"],
+							"query": [
+								{
+									"key": "reviewType",
+									"value": "student"
+								}
+							]
+						},
+						"description": "Admin rejects an inappropriate student review (Admin role required)"
+					},
+					"response": []
+				},
+				{
+					"name": "Flag Company Review",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/{{company_review_id}}/flag?reviewType=company",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "{{company_review_id}}", "flag"],
+							"query": [
+								{
+									"key": "reviewType",
+									"value": "company"
+								}
+							]
+						},
+						"description": "User flags a company review as inappropriate for admin review"
+					},
+					"response": []
+				},
+				{
+					"name": "Flag Student Review",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/{{student_review_id}}/flag?reviewType=student",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "{{student_review_id}}", "flag"],
+							"query": [
+								{
+									"key": "reviewType",
+									"value": "student"
+								}
+							]
+						},
+						"description": "User flags a student review as inappropriate for admin review"
+					},
+					"response": []
+				}
+			],
+			"description": "Admin moderation endpoints for review approval/rejection/flagging"
+		},
+		{
+			"name": "Test Data & Edge Cases",
+			"item": [
+				{
+					"name": "Create Review - Invalid Rating (Too High)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": {{company_id}},\n  \"studentID\": {{student_id}},\n  \"rating\": 6,\n  \"reviewText\": \"This should fail validation\",\n  \"wouldRecommend\": true,\n  \"isAnonymous\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Tests validation - rating must be between 1 and 5"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Review - Invalid Rating (Too Low)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": {{company_id}},\n  \"studentID\": {{student_id}},\n  \"rating\": 0,\n  \"reviewText\": \"This should fail validation\",\n  \"wouldRecommend\": false,\n  \"isAnonymous\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Tests validation - rating cannot be 0"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Review - Text Too Long",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": {{company_id}},\n  \"studentID\": {{student_id}},\n  \"rating\": 4,\n  \"reviewText\": \"This is a very long review text that exceeds the maximum allowed length of 2000 characters. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. This text is way too long and should fail validation.\",\n  \"wouldRecommend\": true,\n  \"isAnonymous\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Tests validation - review text max 2000 characters"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Duplicate Review for Same Opportunity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": {{company_id}},\n  \"studentID\": {{student_id}},\n  \"completedOpportunityID\": 1,\n  \"rating\": 4,\n  \"reviewText\": \"This should fail - duplicate review for same opportunity\",\n  \"wouldRecommend\": true,\n  \"isAnonymous\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Tests business rule - cannot review same opportunity twice"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Review - Unauthorized User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{company_review_id}},\n  \"rating\": 5,\n  \"reviewText\": \"Trying to update someone else's review\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/{{company_review_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "{{company_review_id}}"]
+						},
+						"description": "Tests authorization - only review author can update (use different user token)"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Response to Pending Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reviewID\": {{company_review_id}},\n  \"companyResponse\": \"This should fail - review not approved yet\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/{{company_review_id}}/response",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "{{company_review_id}}", "response"]
+						},
+						"description": "Tests business rule - can only respond to approved reviews"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-Existent Review",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies/99999",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies", "99999"]
+						},
+						"description": "Tests error handling - review doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Review with All Optional Fields",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": 3,\n  \"studentID\": {{student_id}},\n  \"rating\": 4.2,\n  \"reviewTitle\": \"Comprehensive Review with All Details\",\n  \"reviewText\": \"This review includes all possible fields to test the complete data model.\",\n  \"workEnvironmentRating\": 4.5,\n  \"learningOpportunityRating\": 4.0,\n  \"mentorshipRating\": 4.3,\n  \"compensationRating\": 3.8,\n  \"communicationRating\": 4.1,\n  \"wouldRecommend\": true,\n  \"pros\": \"Every single positive aspect documented here\",\n  \"cons\": \"Every area for improvement listed here\",\n  \"isAnonymous\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Tests complete data model with all optional fields populated"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Minimal Review (Required Fields Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"companyID\": 4,\n  \"studentID\": {{student_id}},\n  \"rating\": 3.5,\n  \"wouldRecommend\": false,\n  \"isAnonymous\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/reviews/companies",
+							"host": ["{{base_url}}"],
+							"path": ["api", "reviews", "companies"]
+						},
+						"description": "Tests minimal valid review with only required fields"
+					},
+					"response": []
+				}
+			],
+			"description": "Test cases for validation, authorization, and edge cases"
+		}
+	]
+}
