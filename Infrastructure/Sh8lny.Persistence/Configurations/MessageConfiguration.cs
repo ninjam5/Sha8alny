@@ -1,35 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sh8lny.Domain.Models;
 
-namespace Sh8lny.Persistence.Configurations;
-
-// Fluent API configuration for Message entity
-public class MessageConfiguration : IEntityTypeConfiguration<Message>
+namespace Sh8lny.Persistence.Configurations
 {
-    public void Configure(EntityTypeBuilder<Message> builder)
+    public class MessageConfiguration : IEntityTypeConfiguration<Message>
     {
-        // Primary key
-        builder.HasKey(m => m.Id);
+        public void Configure(EntityTypeBuilder<Message> builder)
+        {
+            // Table mapping
+            builder.ToTable("Messages");
 
-        // Required properties with max lengths
-        builder.Property(m => m.Content).IsRequired().HasMaxLength(2000);
+            // Primary key
+            builder.HasKey(m => m.MessageID);
 
-        // Timestamp with database default
-        builder.Property(m => m.Created_At).IsRequired().HasDefaultValueSql("GETUTCDATE()");
+            // Properties
+            builder.Property(m => m.MessageText)
+                .IsRequired()
+                .HasMaxLength(4000);
 
-        // Sender relationship (RESTRICT to preserve user data)
-        builder.HasOne(m => m.Sender)
-               .WithMany(u => u.SentMessages)
-               .HasForeignKey(m => m.UIdSender)
-               .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(m => m.MessageType)
+                .IsRequired()
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .HasDefaultValue(MessageType.Text);
 
-        // Receiver relationship (RESTRICT to preserve user data)
-        builder.HasOne(m => m.Receiver)
-               .WithMany(u => u.ReceivedMessages)
-               .HasForeignKey(m => m.UIdReceiver)
-               .OnDelete(DeleteBehavior.Restrict);
+            builder.Property(m => m.AttachmentURL)
+                .HasMaxLength(500);
 
-        builder.ToTable("Messages");
+            builder.Property(m => m.AttachmentName)
+                .HasMaxLength(200);
+
+            builder.Property(m => m.IsRead)
+                .HasDefaultValue(false);
+
+            builder.Property(m => m.IsEdited)
+                .HasDefaultValue(false);
+
+            builder.Property(m => m.SentAt)
+                .HasDefaultValueSql("GETDATE()");
+
+            // Indexes
+            builder.HasIndex(m => m.ConversationID)
+                .HasDatabaseName("IDX_Messages_ConversationID");
+
+            builder.HasIndex(m => m.SenderID)
+                .HasDatabaseName("IDX_Messages_SenderID");
+
+            builder.HasIndex(m => m.SentAt)
+                .HasDatabaseName("IDX_Messages_SentAt");
+
+            builder.HasIndex(m => m.IsRead)
+                .HasDatabaseName("IDX_Messages_IsRead");
+
+            // Relationships
+            builder.HasOne(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationID)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }

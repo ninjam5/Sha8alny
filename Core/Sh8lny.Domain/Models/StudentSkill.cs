@@ -1,12 +1,39 @@
-namespace Sh8lny.Domain.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-// Junction table for Student-Skill many-to-many relationship
-public class StudentSkill
+namespace Sh8lny.Domain.Models
 {
-    // Composite primary key
-    public int StudentId { get; set; }
-    public StudentProfile StudentProfile { get; set; } = null!;
+    public class StudentSkill
+    {
+        // Primary key
+        public int StudentSkillID { get; set; }
 
-    public int SkillId { get; set; }
-    public Skill Skill { get; set; } = null!;
+        // Foreign keys
+        public int StudentID { get; set; }
+        public int SkillID { get; set; }
+
+        // Skill proficiency
+        public ProficiencyLevel? ProficiencyLevel { get; set; }
+
+        // Timestamp
+        public DateTime CreatedAt { get; set; }
+
+        // Navigation properties
+        public Student Student { get; set; } = null!;
+        public Skill Skill { get; set; } = null!;
+    }
+
+    /// <summary>
+    /// Proficiency level enumeration
+    /// </summary>
+    public enum ProficiencyLevel
+    {
+        Beginner,
+        Intermediate,
+        Advanced,
+        Expert
+    }
 }

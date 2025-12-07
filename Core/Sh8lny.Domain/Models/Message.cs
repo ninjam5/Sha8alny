@@ -1,17 +1,49 @@
-namespace Sh8lny.Domain.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-// Direct messaging between users
-public class Message
+namespace Sh8lny.Domain.Models
 {
-    public int Id { get; set; }
-    
-    // Message content
-    public required string Content { get; set; }
-    public DateTime Created_At { get; set; }
+    public class Message
+    {
+        // Primary key
+        public int MessageID { get; set; }
 
-    // Sender and receiver relationships
-    public int UIdSender { get; set; }
-    public User Sender { get; set; } = null!;
-    public int UIdReceiver { get; set; }
-    public User Receiver { get; set; } = null!;
+        // Foreign keys
+        public int ConversationID { get; set; }
+        public int SenderID { get; set; }
+
+        // Message content
+        public required string MessageText { get; set; }
+        public MessageType MessageType { get; set; }
+
+        // Attachments
+        public string? AttachmentURL { get; set; }
+        public string? AttachmentName { get; set; }
+
+        // Message status
+        public bool IsRead { get; set; }
+        public bool IsEdited { get; set; }
+
+        // Timestamps
+        public DateTime SentAt { get; set; }
+        public DateTime? EditedAt { get; set; }
+
+        // Navigation properties
+        public Conversation Conversation { get; set; } = null!;
+        public User Sender { get; set; } = null!;
+    }
+
+    /// <summary>
+    /// Message type enumeration
+    /// </summary>
+    public enum MessageType
+    {
+        Text,
+        File,
+        Image,
+        Link
+    }
 }
