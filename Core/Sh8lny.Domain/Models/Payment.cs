@@ -1,27 +1,82 @@
-namespace Sh8lny.Domain.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-// Financial transaction between users
-public class Payment
+namespace Sh8lny.Domain.Models
 {
-    public int Id { get; set; }
-    
-    // Payment details
-    public decimal Amount { get; set; }
-    public required string Currency { get; set; }
-    public required string Type { get; set; } // e.g., "Full", "Installment"
-    public required string Method { get; set; } // e.g., "Credit Card", "Bank Transfer"
-    public required string Status { get; set; } // e.g., "Pending", "Completed"
-    public DateTime Paid_At { get; set; }
-    
-    // Installment tracking
-    public int Total_Installment { get; set; }
-    public int Installment_Number { get; set; }
+    public class Payment
+    {
+        public int PaymentID { get; set; }
 
-    // Foreign key relationships
-    public int UIdSender { get; set; }
-    public User Sender { get; set; } = null!;
-    public int UIdReceiver { get; set; }
-    public User Receiver { get; set; } = null!;
-    public int Completed_id { get; set; }
-    public CompletedOpportunity CompletedOpportunity { get; set; } = null!;
+        // --- Internal Links ---
+        public int ProjectID { get; set; }
+        public int StudentID { get; set; }
+        public int? CompanyID { get; set; }
+
+        // --- Financials ---
+        public decimal Amount { get; set; } // Amount in CENTS (Paymob usually expects cents) or standard unit
+        public required string Currency { get; set; } // E.g., "EGP"
+        public PaymentStatus Status { get; set; }
+
+        // --- Paymob Specific Fields (CRITICAL) ---
+
+        /// <summary>
+        /// The Order ID returned by Paymob's "Order Registration API"
+        /// </summary>
+        public string? PaymobOrderId { get; set; }
+
+        /// <summary>
+        /// The Transaction ID returned by Paymob after the user pays (via Webhook)
+        /// </summary>
+        public string? PaymobTransactionId { get; set; }
+
+        /// <summary>
+        /// Stores the raw JSON response from Paymob for debugging disputes
+        /// </summary>
+        public string? GatewayRawResponse { get; set; }
+
+        // --- Metadata ---
+        public PaymentMethod PaymentMethod { get; set; } // Card, Wallet, Kiosk
+        public string? Description { get; set; }
+
+        // --- Timestamps ---
+        public DateTime CreatedAt { get; set; }
+        public DateTime? PaidAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+
+        // Navigation properties
+        public Project Project { get; set; } = null!;
+        public Student Student { get; set; } = null!;
+        public Company? Company { get; set; }
+    }
+
+    /// <summary>
+    /// Payment status enumeration
+    /// </summary>
+    public enum PaymentStatus
+    {
+        Pending,
+        Processing,
+        Completed,
+        Failed,
+        Refunded,
+        Cancelled
+    }
+
+    /// <summary>
+    /// Payment method enumeration
+    /// </summary>
+    public enum PaymentMethod
+    {
+        CreditCard,
+        DebitCard,
+        BankTransfer,
+        PayPal,
+        Stripe,
+        Cash,
+        Wallet,
+        Other
+    }
 }

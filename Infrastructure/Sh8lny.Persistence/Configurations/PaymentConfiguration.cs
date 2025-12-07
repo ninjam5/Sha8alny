@@ -1,47 +1,69 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sh8lny.Domain.Models;
 
-namespace Sh8lny.Persistence.Configurations;
-
-// Fluent API configuration for Payment entity
-public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
+namespace Sh8lny.Persistence.Configurations
 {
-    public void Configure(EntityTypeBuilder<Payment> builder)
+    public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
     {
-        // Primary key
-        builder.HasKey(p => p.Id);
+        public void Configure(EntityTypeBuilder<Payment> builder)
+        {
+            // Primary Key
+            builder.HasKey(p => p.PaymentID);
 
-        // Payment amount with precision
-        builder.Property(p => p.Amount).IsRequired().HasColumnType("decimal(18,2)");
+            // Money Precision
+            builder.Property(p => p.Amount)
+                .HasPrecision(18, 2)
+                .IsRequired();
 
-        // Required properties with max lengths and defaults
-        builder.Property(p => p.Currency).IsRequired().HasMaxLength(3);
-        builder.Property(p => p.Type).IsRequired().HasMaxLength(50);
-        builder.Property(p => p.Method).IsRequired().HasMaxLength(50);
-        builder.Property(p => p.Status).IsRequired().HasMaxLength(50).HasDefaultValue("Pending");
+            builder.Property(p => p.Currency)
+                .HasMaxLength(3)
+                .IsRequired();
 
-        // Timestamp with database default
-        builder.Property(p => p.Paid_At).IsRequired().HasDefaultValueSql("GETUTCDATE()");
+            // --- FIX: Match the property names from your Entity ---
 
-        // Sender relationship (RESTRICT to preserve user data)
-        builder.HasOne(p => p.Sender)
-               .WithMany(u => u.SentPayments)
-               .HasForeignKey(p => p.UIdSender)
-               .OnDelete(DeleteBehavior.Restrict);
+            // Paymob Order ID (was PaymentReference)
+            builder.Property(p => p.PaymobOrderId)
+                .HasMaxLength(100);
 
-        // Receiver relationship (RESTRICT to preserve user data)
-        builder.HasOne(p => p.Receiver)
-               .WithMany(u => u.ReceivedPayments)
-               .HasForeignKey(p => p.UIdReceiver)
-               .OnDelete(DeleteBehavior.Restrict);
+            // Paymob Transaction ID (was TransactionID)
+            builder.Property(p => p.PaymobTransactionId)
+                .HasMaxLength(100);
 
-        // CompletedOpportunity relationship (RESTRICT for data integrity)
-        builder.HasOne(p => p.CompletedOpportunity)
-               .WithMany(co => co.Payments)
-               .HasForeignKey(p => p.Completed_id)
-               .OnDelete(DeleteBehavior.Restrict);
+            // --- FIX: Index the correct property ---
+            // Critical for finding the payment when Paymob sends the webhook
+            builder.HasIndex(p => p.PaymobOrderId)
+                .IsUnique(false);
 
-        builder.ToTable("Payments");
+            // Enums as Strings
+            builder.Property(p => p.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            builder.Property(p => p.PaymentMethod)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            // Relationships
+            builder.HasOne(p => p.Project)
+                .WithMany()
+                .HasForeignKey(p => p.ProjectID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(p => p.Student)
+                .WithMany()
+                .HasForeignKey(p => p.StudentID)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(p => p.Company)
+                .WithMany()
+                .HasForeignKey(p => p.CompanyID)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }
