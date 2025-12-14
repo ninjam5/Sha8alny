@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Core\Sh8lny.Abstraction\Sh8lny.Abstraction.csproj" />
     <ProjectReference Include="..\..\Core\Sh8lny.Domain\Sh8lny.Domain.csproj" />
     <ProjectReference Include="..\..\Core\Sh8lny.Service\Sh8lny.Service.csproj" />
   </ItemGroup>

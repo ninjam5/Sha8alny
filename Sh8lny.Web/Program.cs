@@ -1,6 +1,7 @@
-
 using Microsoft.EntityFrameworkCore;
+using Sh8lny.Abstraction.Repositories;
 using Sh8lny.Persistence.Contexts;
+using Sh8lny.Persistence.Repositories;
 
 namespace Sh8lny.Web
 {
@@ -16,10 +17,18 @@ namespace Sh8lny.Web
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            // Database Context
             builder.Services.AddDbContext<Sha8lnyDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+
+            // ==================== Repository & Unit of Work Registration ====================
+            // Register Generic Repository (open generic registration)
+            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+            
+            // Register Unit of Work
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             var app = builder.Build();
 

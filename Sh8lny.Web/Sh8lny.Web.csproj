@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Core\Sh8lny.Abstraction\Sh8lny.Abstraction.csproj" />
     <ProjectReference Include="..\Infrastructure\Sh8lny.Persistence\Sh8lny.Persistence.csproj" />
     <ProjectReference Include="..\Infrastructure\Sh8lny.Presentation\Sh8lny.Presentation.csproj" />
   </ItemGroup>
