@@ -23,11 +23,8 @@ namespace Sh8lny.Web
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
 
-            // ==================== Repository & Unit of Work Registration ====================
-            // Register Generic Repository (open generic registration)
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             
-            // Register Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             var app = builder.Build();
