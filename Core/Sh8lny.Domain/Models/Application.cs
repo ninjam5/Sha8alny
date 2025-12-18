@@ -20,6 +20,8 @@ namespace Sh8lny.Domain.Models
         public required string Resume { get; set; }
         public string? PortfolioURL { get; set; }
         public string? ProposalDocument { get; set; }
+        public string? Duration { get; set; }
+        public decimal? BidAmount { get; set; }
 
         // Status tracking
         public ApplicationStatus Status { get; set; }
