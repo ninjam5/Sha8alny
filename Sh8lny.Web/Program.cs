@@ -65,6 +65,10 @@ namespace Sh8lny.Web
 
             // Application Services
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IStudentService, StudentService>();
+            builder.Services.AddScoped<ICompanyService, CompanyService>();
+            builder.Services.AddScoped<IFileService, FileService>();
+            builder.Services.AddScoped<IProjectService, ProjectService>();
 
             var app = builder.Build();
 
@@ -75,6 +79,9 @@ namespace Sh8lny.Web
             }
 
             app.UseHttpsRedirection();
+
+            // Enable serving static files from wwwroot
+            app.UseStaticFiles();
 
             app.UseAuthentication();
             app.UseAuthorization();

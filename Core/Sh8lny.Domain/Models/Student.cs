@@ -51,6 +51,8 @@ namespace Sh8lny.Domain.Models
 
         // Collections
         public ICollection<StudentSkill> StudentSkills { get; set; } = new HashSet<StudentSkill>();
+        public ICollection<Education> Educations { get; set; } = new HashSet<Education>();
+        public ICollection<Experience> Experiences { get; set; } = new HashSet<Experience>();
         public ICollection<Application> Applications { get; set; } = new HashSet<Application>();
         public ICollection<GroupMember> GroupMemberships { get; set; } = new HashSet<GroupMember>();
         public ICollection<Certificate> Certificates { get; set; } = new HashSet<Certificate>();

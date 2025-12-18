@@ -1,0 +1,413 @@
+Sha8alny API Testing Guide
+
+This document provides a summary of the implemented API endpoints, authentication workflow, and sample data to help the team start testing the backend.
+
+🚀 Getting Started
+
+Prerequisites:
+
+.NET 9 SDK installed.
+
+SQL Server running.
+
+Connection string updated in Sh8lny.Web/appsettings.json.
+
+Run the Server:
+
+cd Sh8lny.Web
+dotnet run
+
+
+
+Server URL: http://localhost:5065 (or check your terminal output)
+
+Swagger UI: http://localhost:5065/swagger
+
+Database Setup (Critical):
+Ensure migrations are applied before testing:
+
+dotnet ef database update
+
+
+
+🔐 Authentication Workflow (Start Here)
+
+Most endpoints require a Bearer Token. You must follow this flow first:
+
+Register a new user (Company or Student).
+
+Login with that user to get the token.
+
+Authorize in Postman:
+
+Go to the "Authorization" tab.
+
+Type: Bearer Token.
+
+Paste the token string.
+
+1. Auth Endpoints
+
+Method
+
+Endpoint
+
+Description
+
+Auth Required
+
+POST
+
+/api/auth/register
+
+Register a new user
+
+❌ No
+
+POST
+
+/api/auth/login
+
+Login and get JWT Token
+
+❌ No
+
+Sample JSON (Register - Company):
+
+{
+  "email": "techcorp@example.com",
+  "password": "Password123!",
+  "role": "Company"
+}
+
+
+Sample JSON (Register - Student):
+
+{
+  "email": "student@example.com",
+  "password": "Password123!",
+  "role": "Student"
+}
+
+
+📂 Master Data (Lookup Tables)
+
+Use these to populate dropdowns in the frontend.
+
+Method
+
+Endpoint
+
+Description
+
+Auth Required
+
+GET
+
+/api/masterdata/skills
+
+List all skills
+
+❌ No
+
+GET
+
+/api/masterdata/departments
+
+List all departments
+
+❌ No
+
+GET
+
+/api/masterdata/universities
+
+List all universities
+
+❌ No
+
+👤 Profile Management
+
+2. Company Profile (For Company Users)
+
+Method
+
+Endpoint
+
+Description
+
+Auth Required
+
+POST
+
+/api/company/profile
+
+Create or Update Profile
+
+✅ Yes (Role: Company)
+
+GET
+
+/api/company/profile
+
+Get My Profile
+
+✅ Yes (Role: Company)
+
+Sample JSON (Create Company):
+
+{
+  "companyName": "TechCorp Solutions",
+  "description": "Leading software development firm.",
+  "industry": "IT Services",
+  "websiteUrl": "[https://techcorp.com](https://techcorp.com)",
+  "address": "123 Tech Park",
+  "city": "Cairo",
+  "country": "Egypt",
+  "contactEmail": "hr@techcorp.com",
+  "logoUrl": "/uploads/logos/default.png"
+}
+
+
+3. Student Profile (For Student Users)
+
+Method
+
+Endpoint
+
+Description
+
+Auth Required
+
+POST
+
+/api/student/profile
+
+Create Full Profile (Transactional)
+
+✅ Yes
+
+Sample JSON (Create Student): Note: Ensure SkillIds exist in your DB (check Master Data first).
+
+{
+  "fullName": "Ahmed Ali",
+  "bio": "Passionate .NET Developer",
+  "phone": "+201000000000",
+  "city": "Alexandria",
+  "country": "Egypt",
+  "educations": [
+    {
+      "universityName": "Alexandria University",
+      "degree": "Bachelor",
+      "fieldOfStudy": "Computer Science",
+      "startYear": 2019,
+      "endYear": 2023,
+      "description": "Graduated with Honors"
+    }
+  ],
+  "experiences": [
+    {
+      "companyName": "Freelance",
+      "role": "Backend Developer",
+      "location": "Remote",
+      "startDate": "2023-01-01T00:00:00Z",
+      "isCurrent": true,
+      "description": "Building APIs using .NET"
+    }
+  ],
+  "skillIds": [1, 2] 
+}
+
+
+💼 Project / Job Marketplace
+
+4. Project Management (For Companies & Students)
+
+Method
+
+Endpoint
+
+Description
+
+Auth Required
+
+POST
+
+/api/projects
+
+Post a new Project
+
+✅ Yes (Role: Company)
+
+GET
+
+/api/projects/my-projects
+
+Get logged-in company's projects
+
+✅ Yes (Role: Company)
+
+PUT
+
+/api/projects/{id}
+
+Update Project
+
+✅ Yes (Owner only)
+
+DELETE
+
+/api/projects/{id}
+
+Delete Project
+
+✅ Yes (Owner only)
+
+GET
+
+/api/projects/{id}
+
+Get Project Details (Public)
+
+❌ No
+
+GET
+
+/api/projects/search
+
+Search & Filter Projects
+
+❌ No
+
+Sample JSON (Create Project):
+
+{
+  "title": "Build E-Commerce Website",
+  "description": "Need a full-stack developer for a shopify-like store.",
+  "projectType": "Fixed",
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-03-01T00:00:00Z",
+  "deadline": "2023-12-31T00:00:00Z",
+  "duration": "3 Months",
+  "requiredSkillIds": [1, 3],
+  "minAcademicYear": 3,
+  "maxApplicants": 50,
+  "isVisible": true
+}
+
+
+5. Advanced Search & Filtering
+
+Use the /api/projects/search endpoint with Query Parameters (not JSON body).
+
+Available Filters:
+
+search (Matches Title or Description)
+
+projectType (Fixed, Internship, etc.)
+
+skillId (Find projects requiring a specific skill)
+
+companyId, status, city
+
+sortBy (title, deadline, viewcount, createdat)
+
+pageNumber & pageSize
+
+Example Request URL: GET http://localhost:5065/api/projects/search?search=web&projectType=Internship&skillId=5&sortBy=deadline&pageNumber=1&pageSize=10
+
+Response (PagedResult):
+
+{
+  "isSuccess": true,
+  "data": {
+    "items": [ ... list of projects ... ],
+    "pageNumber": 1,
+    "pageSize": 10,
+    "totalCount": 45,
+    "totalPages": 5,
+    "hasPreviousPage": false,
+    "hasNextPage": true
+  }
+}
+
+
+🖼️ File Uploads
+
+Helper endpoints for uploading images/files.
+
+Method
+
+Endpoint
+
+Description
+
+Auth Required
+
+POST
+
+/api/media/upload/profile
+
+Upload User Avatar
+
+✅ Yes
+
+POST
+
+/api/media/upload/logo
+
+Upload Company Logo
+
+✅ Yes
+
+POST
+
+/api/media/upload/project
+
+Upload Project Attachment
+
+✅ Yes
+
+Request Type: form-data
+
+Key: file (Select a file from your computer)
+
+Response: Returns the file path (e.g., /uploads/logos/gui-123.png). Copy this string into your Profile/Project creation JSON.
+
+🧪 Testing Checklist for the Team
+
+$$$$
+
+ Register a Company User (TechCorp).
+
+$$$$
+
+ Login as Company and copy the Token.
+
+$$$$
+
+ Create Company Profile using the token.
+
+$$$$
+
+ Post a Project ("Build Website") using the token.
+
+$$$$
+
+ Register a Student User (Ahmed).
+
+$$$$
+
+ Login as Student and get a new Token.
+
+$$$$
+
+ Create Student Profile (with Skills/Education).
+
+$$$$
+
+ Get Project Details (using the ID from step 4).
+
+$$$$
+
+ Search Projects using filters (e.g., find all "Internships").

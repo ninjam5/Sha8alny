@@ -18,6 +18,8 @@ namespace Sh8lny.Persistence.Repositories
         private IGenericRepository<Department>? _departments;
         private IGenericRepository<Skill>? _skills;
         private IGenericRepository<StudentSkill>? _studentSkills;
+        private IGenericRepository<Education>? _educations;
+        private IGenericRepository<Experience>? _experiences;
         private IGenericRepository<Project>? _projects;
         private IGenericRepository<ProjectRequiredSkill>? _projectRequiredSkills;
         private IGenericRepository<ProjectModule>? _projectModules;
@@ -63,6 +65,12 @@ namespace Sh8lny.Persistence.Repositories
 
         public IGenericRepository<StudentSkill> StudentSkills =>
             _studentSkills ??= new GenericRepository<StudentSkill>(_context);
+
+        public IGenericRepository<Education> Educations =>
+            _educations ??= new GenericRepository<Education>(_context);
+
+        public IGenericRepository<Experience> Experiences =>
+            _experiences ??= new GenericRepository<Experience>(_context);
 
         public IGenericRepository<Project> Projects =>
             _projects ??= new GenericRepository<Project>(_context);

@@ -13,6 +13,8 @@ namespace Sh8lny.Abstraction.Repositories
 
         IGenericRepository<Skill> Skills { get; }
         IGenericRepository<StudentSkill> StudentSkills { get; }
+        IGenericRepository<Education> Educations { get; }
+        IGenericRepository<Experience> Experiences { get; }
 
         IGenericRepository<Project> Projects { get; }
         IGenericRepository<ProjectRequiredSkill> ProjectRequiredSkills { get; }
