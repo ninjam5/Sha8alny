@@ -137,6 +137,32 @@ public class ExecutionController : ControllerBase
     }
 
     /// <summary>
+    /// Completes a job/project formally after all modules are finished.
+    /// Only the company owner can complete the job.
+    /// </summary>
+    /// <param name="dto">The completion data including feedback and deliverable URL.</param>
+    /// <returns>Completion summary with statistics.</returns>
+    [HttpPost("complete")]
+    [Authorize(Roles = "Company")]
+    public async Task<ActionResult<ServiceResponse<CompletionSummaryDto>>> CompleteJob([FromBody] CompleteJobDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null)
+        {
+            return Unauthorized(ServiceResponse<CompletionSummaryDto>.Failure("Invalid or missing user token."));
+        }
+
+        var result = await _executionService.CompleteJobAsync(userId.Value, dto);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Extracts the current user ID from JWT claims.
     /// </summary>
     private int? GetCurrentUserId()

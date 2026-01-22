@@ -28,11 +28,18 @@ namespace Sh8lny.Domain.Models
         //public TimePreference? TimePreference { get; set; }
 
         // Review info
-
         public int? ReviewedBy { get; set; }
         public DateTime? ReviewedAt { get; set; }
         public string? ReviewNotes { get; set; }
 
+        // Completion info
+        public DateTime? CompletedAt { get; set; }
+        public string? CompanyFeedbackNote { get; set; }
+        public string? FinalDeliverableUrl { get; set; }
+
+        // Payment info
+        public bool IsPaid { get; set; }
+        public DateTime? PaidAt { get; set; }
 
         // Timestamps
         public DateTime AppliedAt { get; set; }
@@ -55,6 +62,8 @@ namespace Sh8lny.Domain.Models
         Pending,
         UnderReview,
         Accepted,
+        InProgress,
+        Completed,
         Rejected,
         Withdrawn
     }

@@ -1,9 +1,10 @@
+using Sh8lny.Shared.DTOs.Chat;
 using Sh8lny.Shared.DTOs.Notifications;
 
 namespace Sh8lny.Abstraction.Services;
 
 /// <summary>
-/// Interface for real-time notification delivery.
+/// Interface for real-time notification and message delivery.
 /// Implemented in the Web layer using SignalR.
 /// </summary>
 public interface INotifier
@@ -23,4 +24,12 @@ public interface INotifier
     /// <param name="notification">The notification data.</param>
     /// <returns>Task representing the async operation.</returns>
     Task SendNotificationToManyAsync(IEnumerable<int> userIds, NotificationDto notification);
+
+    /// <summary>
+    /// Sends a real-time chat message to a specific user.
+    /// </summary>
+    /// <param name="userId">The user ID to send the message to.</param>
+    /// <param name="message">The message data.</param>
+    /// <returns>Task representing the async operation.</returns>
+    Task SendMessageToUserAsync(int userId, MessageDto message);
 }

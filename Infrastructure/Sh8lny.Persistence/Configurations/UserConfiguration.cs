@@ -36,6 +36,9 @@ namespace Sh8lny.Persistence.Configurations
             builder.Property(u => u.IsEmailVerified)
                 .HasDefaultValue(false);
 
+            builder.Property(u => u.IsActive)
+                .HasDefaultValue(true);
+
             builder.Property(u => u.VerificationCode)
                 .HasMaxLength(10);
 

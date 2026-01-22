@@ -1,6 +1,7 @@
 using Sh8lny.Abstraction.Repositories;
 using Sh8lny.Abstraction.Services;
 using Sh8lny.Domain.Models;
+using Sh8lny.Shared.DTOs.Certificates;
 using Sh8lny.Shared.DTOs.Common;
 using Sh8lny.Shared.DTOs.Execution;
 using Sh8lny.Shared.DTOs.Notifications;
@@ -14,11 +15,13 @@ public class ProjectExecutionService : IProjectExecutionService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly INotifier _notifier;
+    private readonly ICertificateService _certificateService;
 
-    public ProjectExecutionService(IUnitOfWork unitOfWork, INotifier notifier)
+    public ProjectExecutionService(IUnitOfWork unitOfWork, INotifier notifier, ICertificateService certificateService)
     {
         _unitOfWork = unitOfWork;
         _notifier = notifier;
+        _certificateService = certificateService;
     }
 
     /// <inheritdoc />
@@ -42,6 +45,13 @@ public class ProjectExecutionService : IProjectExecutionService
             if (project.CompanyID != company.CompanyID)
             {
                 return ServiceResponse<int>.Failure("You do not have permission to modify this project.");
+            }
+
+            // 1.5 Verify project type is Internship - modules/milestones only for internships
+            if (project.ProjectType != ProjectType.Internship)
+            {
+                return ServiceResponse<int>.Failure(
+                    "Modules/Milestones are only available for Internship projects.");
             }
 
             // 2. Validate weight - total must not exceed 100%
@@ -149,7 +159,7 @@ public class ProjectExecutionService : IProjectExecutionService
 
             // 2. Verify application status allows progress updates
             if (application.Status != ApplicationStatus.Accepted && 
-                application.Status != ApplicationStatus.UnderReview)
+                application.Status != ApplicationStatus.InProgress)
             {
                 return ServiceResponse<bool>.Failure(
                     $"Cannot update progress for application with status '{application.Status}'. Application must be Accepted or In Progress.");
@@ -344,6 +354,14 @@ public class ProjectExecutionService : IProjectExecutionService
     /// </summary>
     private async Task CheckAndCompleteApplicationAsync(Application application, Student student)
     {
+        // If application is just "Accepted", move it to "InProgress" when first progress is made
+        if (application.Status == ApplicationStatus.Accepted)
+        {
+            application.Status = ApplicationStatus.InProgress;
+            _unitOfWork.Applications.Update(application);
+            await _unitOfWork.SaveAsync();
+        }
+
         var modules = await _unitOfWork.ProjectModules.FindAsync(m => m.ProjectId == application.ProjectID);
         var progressRecords = await _unitOfWork.ApplicationModuleProgress
             .FindAsync(p => p.ApplicationId == application.ApplicationID);
@@ -354,14 +372,10 @@ public class ProjectExecutionService : IProjectExecutionService
             .Select(p => p.ProjectModuleId)
             .ToHashSet();
 
-        // Check if all modules are complete
+        // Check if all modules are complete - notify company but don't auto-complete
         if (moduleIds.Count > 0 && moduleIds.SetEquals(completedModuleIds))
         {
-            // All modules are 100% complete
-            application.Status = ApplicationStatus.UnderReview; // Or create a new "Completed" status
-            _unitOfWork.Applications.Update(application);
-
-            // Notify the company
+            // All modules are 100% complete - notify the company
             var project = await _unitOfWork.Projects.GetByIdAsync(application.ProjectID);
             if (project is not null)
             {
@@ -372,8 +386,8 @@ public class ProjectExecutionService : IProjectExecutionService
                     {
                         UserID = company.UserID,
                         NotificationType = NotificationType.Project,
-                        Title = "Project Completed",
-                        Message = $"{student.FullName} has completed all modules for '{project.ProjectName}'.",
+                        Title = "All Modules Completed",
+                        Message = $"{student.FullName} has completed all modules for '{project.ProjectName}'. You can now formally complete the job.",
                         RelatedProjectID = project.ProjectID,
                         RelatedApplicationID = application.ApplicationID,
                         ActionURL = $"/applications/{application.ApplicationID}/progress",
@@ -401,5 +415,205 @@ public class ProjectExecutionService : IProjectExecutionService
                 }
             }
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceResponse<CompletionSummaryDto>> CompleteJobAsync(int companyUserId, CompleteJobDto dto)
+    {
+        try
+        {
+            // 1. Verify the company profile exists
+            var company = await _unitOfWork.Companies.FindSingleAsync(c => c.UserID == companyUserId);
+            if (company is null)
+            {
+                return ServiceResponse<CompletionSummaryDto>.Failure("Company profile not found.");
+            }
+
+            // 2. Get the application
+            var application = await _unitOfWork.Applications.GetByIdAsync(dto.ApplicationId);
+            if (application is null)
+            {
+                return ServiceResponse<CompletionSummaryDto>.Failure("Application not found.");
+            }
+
+            // 3. Verify the company owns the project
+            var project = await _unitOfWork.Projects.GetByIdAsync(application.ProjectID);
+            if (project is null)
+            {
+                return ServiceResponse<CompletionSummaryDto>.Failure("Project not found.");
+            }
+
+            if (project.CompanyID != company.CompanyID)
+            {
+                return ServiceResponse<CompletionSummaryDto>.Failure(
+                    "You do not have permission to complete this job. Only the project owner can complete it.");
+            }
+
+            // 4. Verify the application is currently In Progress or Accepted
+            if (application.Status != ApplicationStatus.InProgress && 
+                application.Status != ApplicationStatus.Accepted)
+            {
+                return ServiceResponse<CompletionSummaryDto>.Failure(
+                    $"Cannot complete job with status '{application.Status}'. Application must be In Progress or Accepted.");
+            }
+
+            // 5. CRUCIAL: Check that ALL ApplicationModuleProgress entries are at 100%
+            var modules = await _unitOfWork.ProjectModules.FindAsync(m => m.ProjectId == project.ProjectID);
+            var progressRecords = await _unitOfWork.ApplicationModuleProgress
+                .FindAsync(p => p.ApplicationId == dto.ApplicationId);
+
+            var moduleIds = modules.Select(m => m.Id).ToHashSet();
+            var completedModuleIds = progressRecords
+                .Where(p => p.IsCompleted && p.ProgressPercentage == 100)
+                .Select(p => p.ProjectModuleId)
+                .ToHashSet();
+
+            // Check if all modules exist and are completed
+            var incompleteModules = moduleIds.Except(completedModuleIds).ToList();
+            if (incompleteModules.Any())
+            {
+                return ServiceResponse<CompletionSummaryDto>.Failure(
+                    "All modules must be completed before closing the job.");
+            }
+
+            // 6. Get student info for the summary and notification
+            var student = await _unitOfWork.Students.GetByIdAsync(application.StudentID);
+            if (student is null)
+            {
+                return ServiceResponse<CompletionSummaryDto>.Failure("Student not found.");
+            }
+
+            // 7. Perform state changes
+            // Update Application status to Completed
+            application.Status = ApplicationStatus.Completed;
+            application.CompletedAt = DateTime.UtcNow;
+            application.CompanyFeedbackNote = dto.CompanyFeedbackNote;
+            application.FinalDeliverableUrl = dto.FinalDeliverableUrl;
+            _unitOfWork.Applications.Update(application);
+
+            // Update Project status to Closed
+            project.Status = ProjectStatus.Closed;
+            project.EndDate = DateTime.UtcNow;
+            _unitOfWork.Projects.Update(project);
+
+            await _unitOfWork.SaveAsync();
+
+            // 8. Send notification to the student
+            var notification = new Notification
+            {
+                UserID = student.UserID,
+                NotificationType = NotificationType.Application,
+                Title = "Job Completed!",
+                Message = $"Your work on '{project.ProjectName}' has been marked as Completed! You can now request payment.",
+                RelatedProjectID = project.ProjectID,
+                RelatedApplicationID = application.ApplicationID,
+                ActionURL = $"/applications/{application.ApplicationID}",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _unitOfWork.Notifications.AddAsync(notification);
+            await _unitOfWork.SaveAsync();
+
+            // Send real-time notification
+            var notificationDto = new NotificationDto
+            {
+                Id = notification.NotificationID,
+                Title = notification.Title,
+                Message = notification.Message,
+                NotificationType = notification.NotificationType.ToString(),
+                IsRead = false,
+                CreatedAt = notification.CreatedAt,
+                RelatedProjectId = notification.RelatedProjectID,
+                RelatedApplicationId = notification.RelatedApplicationID,
+                ActionUrl = notification.ActionURL
+            };
+            await _notifier.SendNotificationAsync(student.UserID, notificationDto);
+
+            // 9. Generate certificate automatically
+            CertificateDto? certificateDto = null;
+            var certResult = await _certificateService.GenerateCertificateAsync(application.ApplicationID);
+            if (certResult.IsSuccess)
+            {
+                certificateDto = certResult.Data;
+            }
+
+            // 10. Build completion summary
+            var startDate = application.ReviewedAt ?? application.AppliedAt;
+            var endDate = application.CompletedAt!.Value;
+            var duration = endDate - startDate;
+            var durationDays = (int)duration.TotalDays;
+
+            // Build human-readable duration text
+            var durationText = BuildDurationText(duration);
+
+            // Get total paid (placeholder - would need integration with Payment system)
+            decimal totalPaid = application.BidAmount ?? 0;
+
+            var summary = new CompletionSummaryDto
+            {
+                ApplicationId = application.ApplicationID,
+                ProjectId = project.ProjectID,
+                ProjectName = project.ProjectName,
+                StudentName = student.FullName ?? "Unknown",
+                StartDate = startDate,
+                EndDate = endDate,
+                DurationDays = durationDays,
+                DurationText = durationText,
+                TotalPaid = totalPaid,
+                TotalModulesCompleted = moduleIds.Count,
+                CompanyFeedbackNote = dto.CompanyFeedbackNote,
+                FinalDeliverableUrl = dto.FinalDeliverableUrl,
+                CertificateGenerated = certificateDto is not null,
+                CertificateId = certificateDto?.UniqueId
+            };
+
+            return ServiceResponse<CompletionSummaryDto>.Success(summary, "Job completed successfully!");
+        }
+        catch (Exception ex)
+        {
+            return ServiceResponse<CompletionSummaryDto>.Failure(
+                "An error occurred while completing the job.",
+                new List<string> { ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Builds a human-readable duration text from a TimeSpan.
+    /// </summary>
+    private static string BuildDurationText(TimeSpan duration)
+    {
+        var parts = new List<string>();
+
+        if (duration.Days >= 30)
+        {
+            var months = duration.Days / 30;
+            var remainingDays = duration.Days % 30;
+            parts.Add($"{months} month{(months > 1 ? "s" : "")}");
+            if (remainingDays > 0)
+            {
+                var weeks = remainingDays / 7;
+                var days = remainingDays % 7;
+                if (weeks > 0) parts.Add($"{weeks} week{(weeks > 1 ? "s" : "")}");
+                if (days > 0) parts.Add($"{days} day{(days > 1 ? "s" : "")}");
+            }
+        }
+        else if (duration.Days >= 7)
+        {
+            var weeks = duration.Days / 7;
+            var days = duration.Days % 7;
+            parts.Add($"{weeks} week{(weeks > 1 ? "s" : "")}");
+            if (days > 0) parts.Add($"{days} day{(days > 1 ? "s" : "")}");
+        }
+        else if (duration.Days > 0)
+        {
+            parts.Add($"{duration.Days} day{(duration.Days > 1 ? "s" : "")}");
+        }
+        else
+        {
+            parts.Add("Less than a day");
+        }
+
+        return string.Join(", ", parts);
     }
 }

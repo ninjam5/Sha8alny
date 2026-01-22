@@ -41,6 +41,21 @@ namespace Sh8lny.Persistence.Configurations
             builder.Property(a => a.AppliedAt)
                 .HasDefaultValueSql("GETDATE()");
 
+            // Payment fields
+            builder.Property(a => a.IsPaid)
+                .HasDefaultValue(false);
+
+            builder.Property(a => a.PaidAt);
+
+            // Completion fields
+            builder.Property(a => a.CompletedAt);
+
+            builder.Property(a => a.CompanyFeedbackNote)
+                .HasMaxLength(2000);
+
+            builder.Property(a => a.FinalDeliverableUrl)
+                .HasMaxLength(500);
+
             // Unique constraint: one application per student per project
             builder.HasIndex(a => new { a.ProjectID, a.StudentID })
                 .IsUnique()

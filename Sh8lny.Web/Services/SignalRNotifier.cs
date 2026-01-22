@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.SignalR;
 using Sh8lny.Abstraction.Services;
+using Sh8lny.Shared.DTOs.Chat;
 using Sh8lny.Shared.DTOs.Notifications;
 using Sh8lny.Web.Hubs;
 
 namespace Sh8lny.Web.Services;
 
 /// <summary>
-/// SignalR implementation of INotifier for real-time notification delivery.
+/// SignalR implementation of INotifier for real-time notification and message delivery.
 /// </summary>
 public class SignalRNotifier : INotifier
 {
@@ -54,6 +55,24 @@ public class SignalRNotifier : INotifier
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send real-time notification to multiple users");
+            // Don't throw - real-time delivery failure shouldn't break the main operation
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task SendMessageToUserAsync(int userId, MessageDto message)
+    {
+        try
+        {
+            await _hubContext.Clients.User(userId.ToString())
+                .SendAsync("ReceiveMessage", message);
+
+            _logger.LogInformation("Real-time message sent to user {UserId} in conversation {ConversationId}", 
+                userId, message.ConversationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send real-time message to user {UserId}", userId);
             // Don't throw - real-time delivery failure shouldn't break the main operation
         }
     }

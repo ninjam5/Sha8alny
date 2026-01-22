@@ -49,6 +49,7 @@ namespace Sh8lny.Domain.Models
         Acceptance,
         Rejection,
         System,
-        Certificate
+        Certificate,
+        Payment
     }
 }

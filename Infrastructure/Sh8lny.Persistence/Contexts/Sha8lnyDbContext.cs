@@ -57,6 +57,7 @@ namespace Sh8lny.Persistence.Contexts
         // Payments & Completed Opportunities
         public DbSet<Payment> Payments { get; set; } = null!;
         public DbSet<CompletedOpportunity> CompletedOpportunities { get; set; } = null!;
+        public DbSet<Transaction> Transactions { get; set; } = null!;
 
         // Reviews
         public DbSet<CompanyReview> CompanyReviews { get; set; } = null!;

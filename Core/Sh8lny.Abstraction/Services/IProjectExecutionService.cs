@@ -47,4 +47,12 @@ public interface IProjectExecutionService
     /// <param name="moduleId">The module ID.</param>
     /// <returns>Service response indicating success or failure.</returns>
     Task<ServiceResponse<bool>> DeleteModuleAsync(int companyUserId, int moduleId);
+
+    /// <summary>
+    /// Completes a job/project formally by the company after all modules are finished.
+    /// </summary>
+    /// <param name="companyUserId">The company user ID (must be the project owner).</param>
+    /// <param name="dto">The completion data including feedback and deliverable URL.</param>
+    /// <returns>Service response containing the completion summary.</returns>
+    Task<ServiceResponse<CompletionSummaryDto>> CompleteJobAsync(int companyUserId, CompleteJobDto dto);
 }

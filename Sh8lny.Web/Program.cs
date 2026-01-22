@@ -6,6 +6,7 @@ using Sh8lny.Abstraction.Repositories;
 using Sh8lny.Abstraction.Services;
 using Sh8lny.Persistence.Contexts;
 using Sh8lny.Persistence.Repositories;
+using Sh8lny.Persistence.Seeding;
 using Sh8lny.Service;
 using Sh8lny.Shared.Options;
 using Sh8lny.Web.Hubs;
@@ -16,7 +17,7 @@ namespace Sh8lny.Web
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -130,12 +131,25 @@ namespace Sh8lny.Web
             builder.Services.AddScoped<IProjectService, ProjectService>();
             builder.Services.AddScoped<IApplicationService, ApplicationService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<ICertificateService, CertificateService>();
             builder.Services.AddScoped<IProjectExecutionService, ProjectExecutionService>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
+            builder.Services.AddScoped<IChatService, ChatService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
+            builder.Services.AddScoped<IUserSettingsService, UserSettingsService>();
 
             // Real-time notification service (SignalR)
             builder.Services.AddScoped<INotifier, SignalRNotifier>();
 
             var app = builder.Build();
+
+            // Seed database with demo data
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<Sha8lnyDbContext>();
+                await DbInitializer.SeedAsync(context);
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -161,7 +175,7 @@ namespace Sh8lny.Web
             // Map SignalR Hubs
             app.MapHub<NotificationHub>("/hubs/notifications");
 
-            app.Run();
+            await app.RunAsync();
         }
     }
 }

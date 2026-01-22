@@ -15,6 +15,8 @@ namespace Sh8lny.Domain.Models
         public int CompanyID { get; set; }
         public int StudentID { get; set; }
         public int? CompletedOpportunityID { get; set; }
+        public int? ProjectID { get; set; }
+        public int? ApplicationID { get; set; }
 
         // Review details
         public decimal Rating { get; set; }

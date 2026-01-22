@@ -43,6 +43,7 @@ namespace Sh8lny.Abstraction.Repositories
         IGenericRepository<StudentReview> StudentReviews { get; }
 
         IGenericRepository<SavedOpportunity> SavedOpportunities { get; }
+        IGenericRepository<Transaction> Transactions { get; }
         Task<int> SaveAsync();
         Task<int> SaveAsync(CancellationToken cancellationToken);
         
