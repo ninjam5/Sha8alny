@@ -144,11 +144,27 @@ namespace Sh8lny.Web
 
             var app = builder.Build();
 
-            // Seed database with demo data
+            // Apply pending migrations and seed database with demo data
             using (var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<Sha8lnyDbContext>();
-                await DbInitializer.SeedAsync(context);
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                
+                try
+                {
+                    logger.LogInformation("Applying database migrations...");
+                    await context.Database.MigrateAsync();
+                    logger.LogInformation("Database migrations applied successfully.");
+                    
+                    logger.LogInformation("Seeding database...");
+                    await DbInitializer.SeedAsync(context);
+                    logger.LogInformation("Database seeding completed.");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+                    throw;
+                }
             }
 
             // Configure the HTTP request pipeline.

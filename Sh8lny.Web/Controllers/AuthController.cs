@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sh8lny.Abstraction.Services;
 using Sh8lny.Shared.DTOs.Auth;
@@ -52,5 +54,31 @@ public class AuthController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Gets the current authenticated user's basic information.
+    /// </summary>
+    /// <returns>User summary including display name and profile picture.</returns>
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<ActionResult<UserSummaryDto>> GetCurrentUser()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { Message = "Invalid or missing user token." });
+        }
+
+        var result = await _authService.GetCurrentUserAsync(userId);
+
+        if (!result.IsSuccess)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result.Data);
     }
 }

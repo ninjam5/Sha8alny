@@ -7,6 +7,7 @@ using Sh8lny.Abstraction.Repositories;
 using Sh8lny.Abstraction.Services;
 using Sh8lny.Domain.Models;
 using Sh8lny.Shared.DTOs.Auth;
+using Sh8lny.Shared.DTOs.Common;
 using Sh8lny.Shared.Options;
 using BC = BCrypt.Net.BCrypt;
 
@@ -155,5 +156,61 @@ public class AuthService : IAuthService
         );
 
         return (new JwtSecurityTokenHandler().WriteToken(token), expiration);
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceResponse<UserSummaryDto>> GetCurrentUserAsync(int userId)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        if (user is null)
+        {
+            return ServiceResponse<UserSummaryDto>.Failure("User not found.");
+        }
+
+        var summary = new UserSummaryDto
+        {
+            Id = user.UserID,
+            Email = user.Email,
+            Role = user.UserType.ToString()
+        };
+
+        switch (user.UserType)
+        {
+            case UserType.Student:
+                var student = await _unitOfWork.Students.FindSingleAsync(s => s.UserID == userId);
+                if (student is not null)
+                {
+                    summary.DisplayName = $"{student.FirstName} {student.LastName}".Trim();
+                    summary.ProfilePictureUrl = student.ProfilePicture;
+                }
+                else
+                {
+                    summary.DisplayName = user.Email;
+                }
+                break;
+
+            case UserType.Company:
+                var company = await _unitOfWork.Companies.FindSingleAsync(c => c.UserID == userId);
+                if (company is not null)
+                {
+                    summary.DisplayName = company.CompanyName;
+                    summary.ProfilePictureUrl = company.CompanyLogo;
+                }
+                else
+                {
+                    summary.DisplayName = user.Email;
+                }
+                break;
+
+            case UserType.Admin:
+            case UserType.University:
+            default:
+                summary.DisplayName = user.FirstName is not null && user.LastName is not null
+                    ? $"{user.FirstName} {user.LastName}".Trim()
+                    : user.Email;
+                break;
+        }
+
+        return ServiceResponse<UserSummaryDto>.Success(summary);
     }
 }
