@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Build outputs
+**/bin/
+**/obj/
+
+# IDE and editor files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results
+**/TestResults/
+
+# NuGet packages (restored during build)
+**/packages/
+
+# Logs
+**/Logs/
+*.log
+
+# Docker files (not needed inside container)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+*.md
+README*
+LICENSE
+
+# Miscellaneous
+*.txt
+*.http
+summary.txt
