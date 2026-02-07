@@ -1,0 +1,628 @@
+%% ============================================================
+%%  Sha8alny — Full Low-Level ERD (Mermaid)
+%%  Generated from Sh8lny.Domain.Models (30 entities)
+%%  Paste into https://mermaid.live to render
+%% ============================================================
+
+erDiagram
+
+    %% ─────────────────────────────────────────────
+    %%  USER  (Central Identity)
+    %% ─────────────────────────────────────────────
+    User {
+        int UserID PK
+        string FirstName
+        string LastName
+        string Email
+        string PasswordHash
+        UserType UserType "Student | Company | University | Admin"
+        bool IsEmailVerified
+        string VerificationCode
+        datetime VerificationCodeExpiry
+        bool IsActive
+        datetime CreatedAt
+        datetime LastLoginAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  USER SETTINGS
+    %% ─────────────────────────────────────────────
+    UserSettings {
+        int SettingID PK
+        int UserID FK
+        bool EmailNotifications
+        bool PushNotifications
+        bool MessageNotifications
+        bool ApplicationNotifications
+        string Language
+        string Timezone
+        ProfileVisibility ProfileVisibility "Public | Private | UniversityOnly"
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  STUDENT
+    %% ─────────────────────────────────────────────
+    Student {
+        int StudentID PK
+        int UserID FK
+        string FirstName
+        string LastName
+        string Bio
+        string Phone
+        string ProfilePicture
+        string GitHubProfile
+        int UniversityID FK
+        int DepartmentID FK
+        AcademicYear AcademicYear "FirstYear-Graduate"
+        string StudentIDNumber
+        string City
+        string State
+        string Country
+        int ProfileCompleteness
+        StudentStatus Status "Active | Inactive | Suspended | Graduated"
+        decimal AverageRating
+        int TotalReviews
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  COMPANY
+    %% ─────────────────────────────────────────────
+    Company {
+        int CompanyID PK
+        int UserID FK
+        string CompanyName
+        string CompanyLogo
+        string ContactEmail
+        string ContactPhone
+        string Website
+        string Address
+        string City
+        string State
+        string Country
+        string Industry
+        string Description
+        decimal AverageRating
+        int TotalReviews
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  UNIVERSITY
+    %% ─────────────────────────────────────────────
+    University {
+        int UniversityID PK
+        int UserID FK
+        string UniversityName
+        string UniversityLogo
+        string ContactEmail
+        string ContactPhone
+        string Website
+        string Address
+        string City
+        string Country
+        UniversityType UniversityType "Public | Private | International"
+        bool IsActive
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  DEPARTMENT
+    %% ─────────────────────────────────────────────
+    Department {
+        int DepartmentID PK
+        int UniversityID FK
+        string DepartmentName
+        string Description
+        bool IsActive
+        datetime CreatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  EDUCATION
+    %% ─────────────────────────────────────────────
+    Education {
+        int EducationID PK
+        int StudentID FK
+        string UniversityName
+        string Degree
+        string FieldOfStudy
+        int StartYear
+        int EndYear
+        string Description
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  EXPERIENCE
+    %% ─────────────────────────────────────────────
+    Experience {
+        int ExperienceID PK
+        int StudentID FK
+        string CompanyName
+        string Role
+        string Location
+        datetime StartDate
+        datetime EndDate
+        bool IsCurrent
+        string Description
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  SKILL  (Master Data)
+    %% ─────────────────────────────────────────────
+    Skill {
+        int SkillID PK
+        string SkillName
+        SkillCategory SkillCategory "Backend | Frontend | UIUX | Mobile | etc"
+        string Description
+        bool IsActive
+        datetime CreatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  STUDENT SKILL  (Junction)
+    %% ─────────────────────────────────────────────
+    StudentSkill {
+        int StudentSkillID PK
+        int StudentID FK
+        int SkillID FK
+        ProficiencyLevel ProficiencyLevel "Beginner-Expert"
+        datetime CreatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  PROJECT
+    %% ─────────────────────────────────────────────
+    Project {
+        int ProjectID PK
+        int CompanyID FK
+        string ProjectName
+        string ProjectCode
+        string Description
+        ProjectType ProjectType "Internship | GraduationProject | Training | PartTime | FullTime"
+        datetime StartDate
+        datetime EndDate
+        datetime Deadline
+        string Duration
+        string RequiredSkills
+        string MinAcademicYear
+        int MaxApplicants
+        ProjectStatus Status "Draft | Active | Pending | Complete | Cancelled | Closed"
+        bool IsVisible
+        int CreatedBy
+        string CreatedByName
+        int ViewCount
+        int ApplicationCount
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  PROJECT MODULE
+    %% ─────────────────────────────────────────────
+    ProjectModule {
+        int Id PK
+        int ProjectId FK
+        string Title
+        string Description
+        string EstimatedDuration
+        int OrderIndex
+        decimal Weight
+        ModuleStatus Status "Pending | InProgress | Completed"
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  PROJECT REQUIRED SKILL  (Junction)
+    %% ─────────────────────────────────────────────
+    ProjectRequiredSkill {
+        int ProjectSkillID PK
+        int ProjectID FK
+        int SkillID FK
+        bool IsRequired
+        datetime CreatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  APPLICATION
+    %% ─────────────────────────────────────────────
+    Application {
+        int ApplicationID PK
+        int ProjectID FK
+        int StudentID FK
+        string CoverLetter
+        string Resume
+        string PortfolioURL
+        string ProposalDocument
+        string Duration
+        decimal BidAmount
+        ApplicationStatus Status "Submit-Withdrawn"
+        int ReviewedBy
+        datetime ReviewedAt
+        string ReviewNotes
+        datetime CompletedAt
+        string CompanyFeedbackNote
+        string FinalDeliverableUrl
+        bool IsPaid
+        datetime PaidAt
+        datetime AppliedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  APPLICATION MODULE PROGRESS
+    %% ─────────────────────────────────────────────
+    ApplicationModuleProgress {
+        int Id PK
+        int ApplicationId FK
+        int ProjectModuleId FK
+        int ProgressPercentage
+        string Note
+        bool IsCompleted
+        datetime CompletedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  PROJECT GROUP
+    %% ─────────────────────────────────────────────
+    ProjectGroup {
+        int GroupID PK
+        int ProjectID FK
+        string GroupName
+        string Description
+        int MaxMembers
+        datetime CreatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  GROUP MEMBER  (Junction)
+    %% ─────────────────────────────────────────────
+    GroupMember {
+        int GroupMemberID PK
+        int GroupID FK
+        int StudentID FK
+        string Role
+        datetime JoinedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  SAVED OPPORTUNITY  (Junction)
+    %% ─────────────────────────────────────────────
+    SavedOpportunity {
+        int SavedID PK
+        int StudentID FK
+        int ProjectID FK
+        datetime SavedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  COMPLETED OPPORTUNITY
+    %% ─────────────────────────────────────────────
+    CompletedOpportunity {
+        int CompletedOpportunityID PK
+        int StudentID FK
+        int ProjectID FK
+        int ApplicationID FK
+        int CertificateID FK
+        string OpportunityTitle
+        string Description
+        OpportunityType OpportunityType "Internship-Workshop"
+        datetime StartDate
+        datetime EndDate
+        int DurationInDays
+        decimal Rating
+        string StudentFeedback
+        string CompanyFeedback
+        string Achievements
+        string SkillsGained
+        CompletionStatus Status "Completed-UnderReview"
+        bool IsVerified
+        int VerifiedBy FK
+        datetime VerifiedAt
+        bool IsPaid
+        decimal TotalPayment
+        bool IsVisibleOnProfile
+        datetime CompletedAt
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  CERTIFICATE
+    %% ─────────────────────────────────────────────
+    Certificate {
+        int CertificateID PK
+        int StudentID FK
+        int ProjectID FK
+        int CompanyID FK
+        string CertificateNumber
+        string CertificateTitle
+        string Description
+        string CertificateURL
+        datetime IssuedAt
+        datetime ExpiresAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  PAYMENT
+    %% ─────────────────────────────────────────────
+    Payment {
+        int PaymentID PK
+        int ProjectID FK
+        int StudentID FK
+        int CompanyID FK
+        decimal Amount
+        string Currency
+        PaymentStatus Status "Pending-Cancelled"
+        string PaymobOrderId
+        string PaymobTransactionId
+        string GatewayRawResponse
+        PaymentMethod PaymentMethod "CreditCard-Other"
+        string Description
+        datetime CreatedAt
+        datetime PaidAt
+        datetime UpdatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  TRANSACTION
+    %% ─────────────────────────────────────────────
+    Transaction {
+        int Id PK
+        int ApplicationId FK
+        int PayerId FK
+        int PayeeId FK
+        decimal Amount
+        datetime TransactionDate
+        string PaymentMethod
+        string ReferenceId
+        TransactionStatus Status "Pending-Refunded"
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  CONVERSATION
+    %% ─────────────────────────────────────────────
+    Conversation {
+        int ConversationID PK
+        ConversationType ConversationType "Direct | Group"
+        int GroupID FK
+        string ConversationName
+        datetime CreatedAt
+        datetime LastMessageAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  CONVERSATION PARTICIPANT  (Junction)
+    %% ─────────────────────────────────────────────
+    ConversationParticipant {
+        int ParticipantID PK
+        int ConversationID FK
+        int UserID FK
+        datetime JoinedAt
+        datetime LastReadAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  MESSAGE
+    %% ─────────────────────────────────────────────
+    Message {
+        int MessageID PK
+        int ConversationID FK
+        int SenderID FK
+        string MessageText
+        MessageType MessageType "Text | File | Image | Link"
+        string AttachmentURL
+        string AttachmentName
+        bool IsRead
+        bool IsEdited
+        datetime SentAt
+        datetime EditedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  NOTIFICATION
+    %% ─────────────────────────────────────────────
+    Notification {
+        int NotificationID PK
+        int UserID FK
+        NotificationType NotificationType "Application-Payment"
+        string Title
+        string Message
+        int RelatedProjectID
+        int RelatedApplicationID
+        string ActionURL
+        bool IsRead
+        datetime CreatedAt
+        datetime ReadAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  ACTIVITY LOG
+    %% ─────────────────────────────────────────────
+    ActivityLog {
+        int LogID PK
+        int UserID FK
+        string ActivityType
+        string Description
+        string RelatedEntityType
+        int RelatedEntityID
+        string IPAddress
+        string UserAgent
+        datetime CreatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  DASHBOARD METRIC
+    %% ─────────────────────────────────────────────
+    DashboardMetric {
+        int MetricID PK
+        int TotalStudents
+        int TotalProjects
+        int CompletedProjects
+        int AvailableOpportunities
+        int NewApplicants
+        decimal ActivityIncreasePercent
+        datetime MetricDate
+        datetime CreatedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  COMPANY REVIEW
+    %% ─────────────────────────────────────────────
+    CompanyReview {
+        int ReviewID PK
+        int CompanyID FK
+        int StudentID FK
+        int CompletedOpportunityID FK
+        int ProjectID FK
+        int ApplicationID FK
+        decimal Rating
+        string ReviewTitle
+        string ReviewText
+        decimal WorkEnvironmentRating
+        decimal LearningOpportunityRating
+        decimal MentorshipRating
+        decimal CompensationRating
+        decimal CommunicationRating
+        bool WouldRecommend
+        string Pros
+        string Cons
+        ReviewStatus Status "Pending | Approved | Rejected | Flagged"
+        bool IsVerified
+        bool IsAnonymous
+        datetime CreatedAt
+        datetime UpdatedAt
+        string CompanyResponse
+        datetime CompanyRespondedAt
+    }
+
+    %% ─────────────────────────────────────────────
+    %%  STUDENT REVIEW
+    %% ─────────────────────────────────────────────
+    StudentReview {
+        int ReviewID PK
+        int StudentID FK
+        int CompanyID FK
+        int CompletedOpportunityID FK
+        int ProjectID FK
+        int ApplicationID FK
+        decimal Rating
+        string ReviewTitle
+        string ReviewText
+        decimal TechnicalSkillsRating
+        decimal CommunicationRating
+        decimal ProfessionalismRating
+        decimal TimeManagementRating
+        decimal TeamworkRating
+        decimal ProblemSolvingRating
+        bool WouldHireAgain
+        string Strengths
+        string AreasForImprovement
+        ReviewStatus Status "Pending | Approved | Rejected | Flagged"
+        bool IsVerified
+        bool IsPublic
+        datetime CreatedAt
+        datetime UpdatedAt
+        string StudentResponse
+        datetime StudentRespondedAt
+    }
+
+    %% =============================================================
+    %%  RELATIONSHIPS
+    %% =============================================================
+
+    %% --- User 1:1 Profiles ---
+    User ||--o| Student : "has profile"
+    User ||--o| Company : "has profile"
+    User ||--o| University : "has profile"
+    User ||--|| UserSettings : "has settings"
+
+    %% --- University / Department / Student ---
+    University ||--o{ Department : "contains"
+    University ||--o{ Student : "enrolls"
+    Department ||--o{ Student : "belongs to"
+
+    %% --- Student Portfolio ---
+    Student ||--o{ Education : "has"
+    Student ||--o{ Experience : "has"
+
+    %% --- Skills (Many-to-Many via Junctions) ---
+    Student ||--o{ StudentSkill : "possesses"
+    Skill ||--o{ StudentSkill : "held by"
+    Project ||--o{ ProjectRequiredSkill : "requires"
+    Skill ||--o{ ProjectRequiredSkill : "required by"
+
+    %% --- Company -> Projects ---
+    Company ||--o{ Project : "posts"
+
+    %% --- Project Modules ---
+    Project ||--o{ ProjectModule : "divided into"
+
+    %% --- Applications ---
+    Project ||--o{ Application : "receives"
+    Student ||--o{ Application : "submits"
+
+    %% --- Application Module Progress ---
+    Application ||--o{ ApplicationModuleProgress : "tracks"
+    ProjectModule ||--o{ ApplicationModuleProgress : "tracked in"
+
+    %% --- Project Groups & Members ---
+    Project ||--o{ ProjectGroup : "has"
+    ProjectGroup ||--o{ GroupMember : "contains"
+    Student ||--o{ GroupMember : "member of"
+
+    %% --- Saved Opportunities ---
+    Student ||--o{ SavedOpportunity : "saves"
+    Project ||--o{ SavedOpportunity : "saved as"
+
+    %% --- Completed Opportunities ---
+    Student ||--o{ CompletedOpportunity : "completes"
+    Project ||--o{ CompletedOpportunity : "completed as"
+    Application ||--o| CompletedOpportunity : "results in"
+    Certificate ||--o| CompletedOpportunity : "linked to"
+    User ||--o{ CompletedOpportunity : "verifies"
+
+    %% --- Certificates ---
+    Student ||--o{ Certificate : "earns"
+    Project ||--o{ Certificate : "grants"
+    Company ||--o{ Certificate : "issues"
+
+    %% --- Payments ---
+    Project ||--o{ Payment : "paid for"
+    Student ||--o{ Payment : "receives"
+    Company ||--o{ Payment : "pays"
+
+    %% --- Transactions ---
+    Application ||--o{ Transaction : "triggers"
+    User ||--o{ Transaction : "payer"
+    User ||--o{ Transaction : "payee"
+
+    %% --- Conversations & Messaging ---
+    ProjectGroup ||--o{ Conversation : "has"
+    Conversation ||--o{ ConversationParticipant : "includes"
+    User ||--o{ ConversationParticipant : "participates in"
+    Conversation ||--o{ Message : "contains"
+    User ||--o{ Message : "sends"
+
+    %% --- Notifications ---
+    User ||--o{ Notification : "receives"
+
+    %% --- Activity Logs ---
+    User ||--o{ ActivityLog : "generates"
+
+    %% --- Reviews ---
+    Company ||--o{ CompanyReview : "reviewed in"
+    Student ||--o{ CompanyReview : "writes"
+    CompletedOpportunity ||--o| CompanyReview : "associated with"
+
+    Student ||--o{ StudentReview : "reviewed in"
+    Company ||--o{ StudentReview : "writes"
+    CompletedOpportunity ||--o| StudentReview : "associated with"

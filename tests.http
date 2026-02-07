@@ -1,0 +1,198 @@
+### ============================================================
+###  Sha8alny — Full Workflow Integration Test
+###  REST Client for VS Code
+###  Target: http://localhost:5000
+### ============================================================
+
+@baseUrl = http://localhost:5000/api
+
+
+### ============================================================
+###  1. REGISTER — Student Account
+### ============================================================
+
+POST {{baseUrl}}/Auth/register
+Content-Type: application/json
+
+{
+    "email": "student_test@test.com",
+    "password": "Test@12345",
+    "role": "Student"
+}
+
+### ============================================================
+###  2. REGISTER — Company Account
+### ============================================================
+
+POST {{baseUrl}}/Auth/register
+Content-Type: application/json
+
+{
+    "email": "company_test@test.com",
+    "password": "Test@12345",
+    "role": "Company"
+}
+
+### ============================================================
+###  3. LOGIN — As Company (save token)
+### ============================================================
+# @name companyLogin
+
+POST {{baseUrl}}/Auth/login
+Content-Type: application/json
+
+{
+    "email": "company_test@test.com",
+    "password": "Test@12345"
+}
+
+### ============================================================
+###  Capture Company Token
+### ============================================================
+
+@companyToken = {{companyLogin.response.body.token}}
+
+### ============================================================
+###  4. POST JOB — Company creates a project
+### ============================================================
+# @name createProject
+
+POST {{baseUrl}}/Projects
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMDAzIiwiZW1haWwiOiJjb21wYW55X3Rlc3RAdGVzdC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDb21wYW55IiwianRpIjoiNTBjOWRiMDctOWMyMC00ODQyLWJiN2ItYTUwMDFjMmMxYTRjIiwiaWF0IjoxNzcwNDk5NzQ1LCJleHAiOjE3NzA1MDMzNDUsImlzcyI6IlNoYThhbG55IiwiYXVkIjoiU2hhOGFsbnlVc2VycyJ9.HlnnbgC4vkMwwaBAM7BydEaF6-f8LHomB_JsZ32rpm0
+
+{
+    "title": "E-Commerce Mobile App Development",
+    "description": "We need a skilled developer to build a cross-platform e-commerce mobile application using Flutter. The app should include product listings, shopping cart, checkout with payment integration, and user authentication.",
+    "projectType": "Internship",
+    "startDate": "2026-03-01",
+    "endDate": "2026-06-01",
+    "deadline": "2026-02-28",
+    "duration": "3 months",
+    "requiredSkillIds": [1, 2, 3],
+    "minAcademicYear": "ThirdYear",
+    "maxApplicants": 5,
+    "isVisible": true
+}
+
+### ============================================================
+###  Capture Project ID
+### ============================================================
+
+@projectId = {{createProject.response.body.data}}
+
+### ============================================================
+###  5. LOGIN — As Student (save token)
+### ============================================================
+# @name studentLogin
+
+POST {{baseUrl}}/Auth/login
+Content-Type: application/json
+
+{
+    "email": "student_test@test.com",
+    "password": "Test@12345"
+}
+
+### ============================================================
+###  Capture Student Token
+### ============================================================
+
+@studentToken = {{studentLogin.response.body.token}}
+
+### ============================================================
+###  6. CREATE STUDENT PROFILE
+### ============================================================
+
+POST {{baseUrl}}/student/profile
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+    "fullName": "Ahmed Hassan",
+    "bio": "Computer Science student passionate about mobile development and AI.",
+    "phone": "+201234567890",
+    "gitHubProfile": "https://github.com/ahmedhassan",
+    "city": "Cairo",
+    "state": "Cairo Governorate",
+    "country": "Egypt",
+    "educations": [
+        {
+            "universityName": "Cairo University",
+            "degree": "Bachelor",
+            "fieldOfStudy": "Computer Science",
+            "startYear": 2023,
+            "endYear": 2027,
+            "description": "Specializing in Software Engineering"
+        }
+    ],
+    "experiences": [
+        {
+            "companyName": "Tech Startup XYZ",
+            "role": "Flutter Developer Intern",
+            "location": "Cairo, Egypt",
+            "startDate": "2025-06-01",
+            "endDate": "2025-09-01",
+            "isCurrent": false,
+            "description": "Built mobile UI components and integrated REST APIs."
+        }
+    ],
+    "skillIds": [1, 2, 3]
+}
+
+### ============================================================
+###  7. SEARCH — Student searches for available jobs
+### ============================================================
+
+GET {{baseUrl}}/Projects/search?keyword=Mobile&pageNumber=1&pageSize=10
+Authorization: Bearer {{studentToken}}
+
+### ============================================================
+###  8. GET PROJECT DETAILS — View the posted job
+### ============================================================
+
+GET {{baseUrl}}/Projects/{{projectId}}
+Authorization: Bearer {{studentToken}}
+
+### ============================================================
+###  9. APPLY — Student applies to the project
+### ============================================================
+
+POST {{baseUrl}}/Applications/apply
+Content-Type: application/json
+Authorization: Bearer {{studentToken}}
+
+{
+    "projectId": {{projectId}},
+    "proposal": "I am a third-year CS student with hands-on Flutter experience from my internship. I have built similar e-commerce features and am confident I can deliver a high-quality app within the timeline. My GitHub showcases relevant projects.",
+    "duration": "3 months",
+    "bidAmount": 0
+}
+
+### ============================================================
+###  10. GET STUDENT PROFILE — Verify profile via /auth/me
+### ============================================================
+
+GET {{baseUrl}}/Auth/me
+Authorization: Bearer {{studentToken}}
+
+### ============================================================
+###  11. MY APPLICATIONS — Student checks their applications
+### ============================================================
+
+GET {{baseUrl}}/Applications/my-applications
+Authorization: Bearer {{studentToken}}
+
+### ============================================================
+###  BONUS: Company views applications for their project
+### ============================================================
+
+GET {{baseUrl}}/Applications/{{projectId}}
+Authorization: Bearer {{companyToken}}
+
+### ============================================================
+###  BONUS: Company — Get current user info
+### ============================================================
+
+GET {{baseUrl}}/Auth/me
+Authorization: Bearer {{companyToken}}
