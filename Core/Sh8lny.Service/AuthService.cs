@@ -20,11 +20,13 @@ public class AuthService : IAuthService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly JwtOptions _jwtOptions;
+    private readonly IMailService _mailService;
 
-    public AuthService(IUnitOfWork unitOfWork, IOptions<JwtOptions> jwtOptions)
+    public AuthService(IUnitOfWork unitOfWork, IOptions<JwtOptions> jwtOptions, IMailService mailService)
     {
         _unitOfWork = unitOfWork;
         _jwtOptions = jwtOptions.Value;
+        _mailService = mailService;
     }
 
     /// <inheritdoc />
@@ -212,5 +214,65 @@ public class AuthService : IAuthService
         }
 
         return ServiceResponse<UserSummaryDto>.Success(summary);
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceResponse<string>> ForgotPasswordAsync(string email)
+    {
+        var user = await _unitOfWork.Users.FindSingleAsync(u => u.Email == email);
+
+        // Always return success to prevent email enumeration
+        if (user is null)
+            return ServiceResponse<string>.Success("If an account with that email exists, a reset code has been sent.");
+
+        // Generate a 6-digit code
+        var code = new Random().Next(100000, 999999).ToString();
+
+        user.PasswordResetToken = code;
+        user.ResetTokenExpires = DateTime.UtcNow.AddMinutes(15);
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveAsync();
+
+        // Build a simple HTML email
+        var htmlBody = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 8px;'>
+                <h2 style='color: #333;'>Password Reset</h2>
+                <p>Hello,</p>
+                <p>You requested a password reset for your <strong>Sha8alny</strong> account.</p>
+                <p>Your verification code is:</p>
+                <div style='text-align: center; margin: 24px 0;'>
+                    <span style='font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #1a73e8;'>{code}</span>
+                </div>
+                <p>This code will expire in <strong>15 minutes</strong>.</p>
+                <p style='color: #888; font-size: 12px;'>If you did not request this, please ignore this email.</p>
+            </div>";
+
+        await _mailService.SendEmailAsync(user.Email, "Sha8alny - Password Reset Code", htmlBody);
+
+        return ServiceResponse<string>.Success("If an account with that email exists, a reset code has been sent.");
+    }
+
+    /// <inheritdoc />
+    public async Task<ServiceResponse<string>> ResetPasswordAsync(ResetPasswordDto dto)
+    {
+        var user = await _unitOfWork.Users.FindSingleAsync(u => u.Email == dto.Email);
+
+        if (user is null)
+            return ServiceResponse<string>.Failure("Invalid request.");
+
+        // Validate token and expiry
+        if (user.PasswordResetToken != dto.Token || user.ResetTokenExpires == null || user.ResetTokenExpires <= DateTime.UtcNow)
+            return ServiceResponse<string>.Failure("Invalid or expired reset code.");
+
+        // Hash the new password and clear the token
+        user.PasswordHash = BC.HashPassword(dto.NewPassword);
+        user.PasswordResetToken = null;
+        user.ResetTokenExpires = null;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveAsync();
+
+        return ServiceResponse<string>.Success("Password has been reset successfully.");
     }
 }

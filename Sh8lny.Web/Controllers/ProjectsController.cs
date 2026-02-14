@@ -141,10 +141,16 @@ public class ProjectsController : ControllerBase
     }
 
     /// <summary>
-    /// Searches and filters projects with pagination.
+    /// Advanced search: filters, sorts, and paginates projects.
     /// </summary>
-    /// <param name="filter">The filter criteria.</param>
+    /// <param name="filter">
+    /// Query params: Keyword, ProjectType, Status, CompanyId,
+    /// DeadlineBefore, DeadlineAfter, SkillIds, SortBy, PageNumber, PageSize.
+    /// </param>
     /// <returns>Paginated list of matching projects.</returns>
+    /// <remarks>
+    /// Example: GET /api/projects/search?Keyword=flutter&amp;SkillIds=1&amp;SkillIds=3&amp;Status=Active&amp;SortBy=newest&amp;PageSize=20
+    /// </remarks>
     [HttpGet("search")]
     [AllowAnonymous]
     public async Task<ActionResult<ServiceResponse<PagedResult<ProjectResponseDto>>>> SearchProjects(

@@ -81,4 +81,28 @@ public class AuthController : ControllerBase
 
         return Ok(result.Data);
     }
+
+    /// <summary>
+    /// Sends a 6-digit password reset code to the user's email.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        var result = await _authService.ForgotPasswordAsync(dto.Email);
+        return Ok(new { Message = result.Data });
+    }
+
+    /// <summary>
+    /// Resets the user's password using the 6-digit code.
+    /// </summary>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        var result = await _authService.ResetPasswordAsync(dto);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { Message = result.Message });
+
+        return Ok(new { Message = result.Data });
+    }
 }

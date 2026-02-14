@@ -25,6 +25,10 @@ namespace Sh8lny.Domain.Models
         public string? VerificationCode { get; set; }
         public DateTime? VerificationCodeExpiry { get; set; }
 
+        // Password Reset
+        public string? PasswordResetToken { get; set; }
+        public DateTime? ResetTokenExpires { get; set; }
+
         // Status and timestamps
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; }

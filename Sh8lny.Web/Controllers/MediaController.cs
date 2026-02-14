@@ -130,9 +130,9 @@ public class MediaController : ControllerBase
                 return BadRequest(FileUploadResponseDto.Failure("Invalid file type. Allowed types: jpg, jpeg, png, gif, pdf."));
             }
 
-            var filePath = await _fileService.SaveFileAsync(file, folderName);
+            var result = await _fileService.SaveFileAsync(file, folderName);
 
-            return Ok(FileUploadResponseDto.Success(filePath, file.FileName, file.Length));
+            return Ok(FileUploadResponseDto.Success(result.FilePath, file.FileName, file.Length, result.ThumbnailPath));
         }
         catch (ArgumentException ex)
         {

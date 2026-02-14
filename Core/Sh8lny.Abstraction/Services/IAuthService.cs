@@ -28,4 +28,15 @@ public interface IAuthService
     /// <param name="userId">The ID of the current user.</param>
     /// <returns>User summary with display name and profile picture based on user type.</returns>
     Task<ServiceResponse<UserSummaryDto>> GetCurrentUserAsync(int userId);
+
+    /// <summary>
+    /// Generates a 6-digit reset code and emails it to the user.
+    /// Always returns success to prevent email enumeration.
+    /// </summary>
+    Task<ServiceResponse<string>> ForgotPasswordAsync(string email);
+
+    /// <summary>
+    /// Resets the user's password using the 6-digit code.
+    /// </summary>
+    Task<ServiceResponse<string>> ResetPasswordAsync(ResetPasswordDto dto);
 }

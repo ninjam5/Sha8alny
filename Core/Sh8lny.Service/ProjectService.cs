@@ -362,79 +362,96 @@ public class ProjectService : IProjectService
     {
         try
         {
-            // Normalize filter values
+            // ── Normalize ──────────────────────────────────────
             filter.Normalize();
 
-            // Get all projects (we'll filter in memory since GenericRepository doesn't support IQueryable)
+            // Get all projects (GenericRepository doesn't expose IQueryable)
             var allProjects = await _unitOfWork.Projects.GetAllAsync();
-            var filteredProjects = allProjects.AsEnumerable();
+            var query = allProjects.AsEnumerable();
 
-            // Apply filters
-            // 1. Visibility filter
+            // ── 1. Visibility ──────────────────────────────────
             if (filter.IsVisible.HasValue)
             {
-                filteredProjects = filteredProjects.Where(p => p.IsVisible == filter.IsVisible.Value);
+                query = query.Where(p => p.IsVisible == filter.IsVisible.Value);
             }
 
-            // 2. Search filter (Title or Description)
-            if (!string.IsNullOrWhiteSpace(filter.Search))
+            // ── 2. Keyword (Title OR Description) ──────────────
+            if (!string.IsNullOrWhiteSpace(filter.Keyword))
             {
-                var searchLower = filter.Search.ToLowerInvariant();
-                filteredProjects = filteredProjects.Where(p =>
-                    p.ProjectName.ToLowerInvariant().Contains(searchLower) ||
-                    p.Description.ToLowerInvariant().Contains(searchLower));
+                var kw = filter.Keyword.ToLowerInvariant();
+                query = query.Where(p =>
+                    p.ProjectName.ToLowerInvariant().Contains(kw) ||
+                    p.Description.ToLowerInvariant().Contains(kw));
             }
 
-            // 3. Project Type filter
+            // ── 3. Project Type ─────────────────────────────────
             if (!string.IsNullOrWhiteSpace(filter.ProjectType) &&
                 Enum.TryParse<ProjectType>(filter.ProjectType, ignoreCase: true, out var projectType))
             {
-                filteredProjects = filteredProjects.Where(p => p.ProjectType == projectType);
+                query = query.Where(p => p.ProjectType == projectType);
             }
 
-            // 4. Status filter
+            // ── 4. Status ───────────────────────────────────────
             if (!string.IsNullOrWhiteSpace(filter.Status) &&
                 Enum.TryParse<ProjectStatus>(filter.Status, ignoreCase: true, out var status))
             {
-                filteredProjects = filteredProjects.Where(p => p.Status == status);
+                query = query.Where(p => p.Status == status);
             }
 
-            // 5. Company filter
+            // ── 5. Company ──────────────────────────────────────
             if (filter.CompanyId.HasValue)
             {
-                filteredProjects = filteredProjects.Where(p => p.CompanyID == filter.CompanyId.Value);
+                query = query.Where(p => p.CompanyID == filter.CompanyId.Value);
             }
 
-            // 6. Skill filter - need to check ProjectRequiredSkills
-            if (filter.SkillId.HasValue)
+            // ── 6. Deadline window ──────────────────────────────
+            if (filter.DeadlineAfter.HasValue)
             {
-                var projectsWithSkill = await _unitOfWork.ProjectRequiredSkills
-                    .FindAsync(ps => ps.SkillID == filter.SkillId.Value);
-                var projectIdsWithSkill = projectsWithSkill.Select(ps => ps.ProjectID).ToHashSet();
-                filteredProjects = filteredProjects.Where(p => projectIdsWithSkill.Contains(p.ProjectID));
+                query = query.Where(p => p.Deadline >= filter.DeadlineAfter.Value);
             }
 
-            // Apply sorting
-            filteredProjects = ApplySorting(filteredProjects, filter.SortBy, filter.SortDescending);
+            if (filter.DeadlineBefore.HasValue)
+            {
+                query = query.Where(p => p.Deadline <= filter.DeadlineBefore.Value);
+            }
 
-            // Get total count before pagination
-            var projectList = filteredProjects.ToList();
+            // ── 7. Skills (at-least-one match) ──────────────────
+            if (filter.SkillIds is { Count: > 0 })
+            {
+                var requestedSkillIds = filter.SkillIds.ToHashSet();
+
+                // Fetch all project-skill mappings that match any of the requested skill IDs
+                var matchingMappings = await _unitOfWork.ProjectRequiredSkills
+                    .FindAsync(ps => requestedSkillIds.Contains(ps.SkillID));
+
+                var projectIdsWithSkill = matchingMappings
+                    .Select(ps => ps.ProjectID)
+                    .ToHashSet();
+
+                query = query.Where(p => projectIdsWithSkill.Contains(p.ProjectID));
+            }
+
+            // ── 8. Sorting (preset-based) ───────────────────────
+            query = ApplySorting(query, filter.SortBy);
+
+            // ── 9. Materialize & count ──────────────────────────
+            var projectList = query.ToList();
             var totalCount = projectList.Count;
 
-            // Apply pagination
+            // ── 10. Pagination ──────────────────────────────────
             var pagedProjects = projectList
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
                 .Take(filter.PageSize)
                 .ToList();
 
-            // Map to DTOs with skills and company info
+            // ── 11. Map to DTOs (with skills & company info) ────
             var projectDtos = new List<ProjectResponseDto>();
             foreach (var project in pagedProjects)
             {
                 var company = await _unitOfWork.Companies.GetByIdAsync(project.CompanyID);
                 var projectSkills = await _unitOfWork.ProjectRequiredSkills
                     .FindAsync(ps => ps.ProjectID == project.ProjectID);
-                
+
                 var skillDtos = new List<ProjectSkillDto>();
                 foreach (var ps in projectSkills)
                 {
@@ -470,27 +487,22 @@ public class ProjectService : IProjectService
     }
 
     /// <summary>
-    /// Applies sorting to the project collection.
+    /// Applies preset-based sorting to the project collection.
+    /// Supported presets: newest, oldest, deadline_asc, deadline_desc,
+    /// views_desc, applications_desc, title_asc, title_desc.
     /// </summary>
-    private static IEnumerable<Project> ApplySorting(IEnumerable<Project> projects, string? sortBy, bool descending)
+    private static IEnumerable<Project> ApplySorting(IEnumerable<Project> projects, string? sortBy)
     {
-        return sortBy?.ToLowerInvariant() switch
+        return sortBy switch
         {
-            "title" or "name" => descending
-                ? projects.OrderByDescending(p => p.ProjectName)
-                : projects.OrderBy(p => p.ProjectName),
-            "deadline" => descending
-                ? projects.OrderByDescending(p => p.Deadline)
-                : projects.OrderBy(p => p.Deadline),
-            "viewcount" or "views" => descending
-                ? projects.OrderByDescending(p => p.ViewCount)
-                : projects.OrderBy(p => p.ViewCount),
-            "applicationcount" or "applications" => descending
-                ? projects.OrderByDescending(p => p.ApplicationCount)
-                : projects.OrderBy(p => p.ApplicationCount),
-            _ => descending
-                ? projects.OrderByDescending(p => p.CreatedAt)
-                : projects.OrderBy(p => p.CreatedAt)
+            "oldest"             => projects.OrderBy(p => p.CreatedAt),
+            "deadline_asc"       => projects.OrderBy(p => p.Deadline),
+            "deadline_desc"      => projects.OrderByDescending(p => p.Deadline),
+            "views_desc"         => projects.OrderByDescending(p => p.ViewCount),
+            "applications_desc"  => projects.OrderByDescending(p => p.ApplicationCount),
+            "title_asc"          => projects.OrderBy(p => p.ProjectName),
+            "title_desc"         => projects.OrderByDescending(p => p.ProjectName),
+            _                    => projects.OrderByDescending(p => p.CreatedAt) // "newest" (default)
         };
     }
 

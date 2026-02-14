@@ -7,6 +7,7 @@ using Sh8lny.Abstraction.Services;
 using Sh8lny.Persistence.Contexts;
 using Sh8lny.Persistence.Repositories;
 using Sh8lny.Persistence.Seeding;
+using Sh8lny.Persistence;
 using Sh8lny.Service;
 using Sh8lny.Shared.Options;
 using Sh8lny.Web.Hubs;
@@ -70,6 +71,10 @@ namespace Sh8lny.Web
             var jwtSettings = builder.Configuration.GetSection(JwtOptions.SectionName);
             builder.Services.Configure<JwtOptions>(jwtSettings);
 
+            // Mail (SMTP) Configuration
+            builder.Services.Configure<MailSettings>(
+                builder.Configuration.GetSection(MailSettings.SectionName));
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -128,6 +133,8 @@ namespace Sh8lny.Web
             builder.Services.AddScoped<IStudentService, StudentService>();
             builder.Services.AddScoped<ICompanyService, CompanyService>();
             builder.Services.AddScoped<IFileService, FileService>();
+            builder.Services.AddScoped<IVirusScanService, ClamAvService>();
+            builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IProjectService, ProjectService>();
             builder.Services.AddScoped<IApplicationService, ApplicationService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
@@ -141,6 +148,10 @@ namespace Sh8lny.Web
 
             // Real-time notification service (SignalR)
             builder.Services.AddScoped<INotifier, SignalRNotifier>();
+
+            // Database Backup
+            builder.Services.AddScoped<IBackupService, BackupService>();
+            builder.Services.AddHostedService<BackupWorker>();
 
             var app = builder.Build();
 

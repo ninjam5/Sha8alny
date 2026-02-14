@@ -48,9 +48,9 @@ public interface IProjectService
     Task<ServiceResponse<IEnumerable<ProjectResponseDto>>> GetCompanyProjectsAsync(int userId);
 
     /// <summary>
-    /// Gets filtered and paginated projects.
+    /// Advanced search: gets filtered, sorted, and paginated projects.
     /// </summary>
-    /// <param name="filter">The filter criteria.</param>
+    /// <param name="filter">The search/filter criteria.</param>
     /// <returns>Service response containing paginated project results.</returns>
     Task<ServiceResponse<PagedResult<ProjectResponseDto>>> GetFilteredProjectsAsync(ProjectFilterDto filter);
 }
