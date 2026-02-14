@@ -26,4 +26,8 @@
     <ProjectReference Include="..\Sh8lny.Shared\Sh8lny.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\profiles\" />
+  </ItemGroup>
+
 </Project>
