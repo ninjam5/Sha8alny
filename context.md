@@ -1,6 +1,6 @@
 # Sha8alny — Project Context Document
 
-> **Purpose:** This document is the single source of truth for any AI coding agent working on the Sha8alny codebase. It is strictly factual, derived from the current codebase state as of **May 2026**. Every AI agent MUST read this file before making any code changes.
+> **Purpose:** This document is the single source of truth for any AI coding agent working on the Sha8alny codebase. It is strictly factual, derived from the current codebase state as of **September 2026**. Every AI agent MUST read this file before making any code changes.
 
 ---
 
@@ -23,7 +23,7 @@
 | **Type**            | Freelancing & Field Training Platform (University Graduation Project) |
 | **Core Goal**       | Connect university students with freelance work, internships, and training opportunities from companies |
 | **License**         | MIT                                                                   |
-| **Repository Root** | `e:\LLM testing\Sha8alny`                                            |
+| **Repository Root** | `C:\Users\Mr. Adham\Sh8lnyProject\Sh8lnySolution`                       |
 | **Solution File**   | `Sh8lnySolution.sln` (Visual Studio 2022, .NET 9)                    |
 
 ### User Roles
@@ -56,7 +56,7 @@ Company Posts Project → Student Applies → Company Reviews Application → Ac
 | **Database**       | SQL Server                                                     | 2022       |
 | **Authentication** | JWT Bearer Tokens (Symmetric Security Key)                     | —          |
 | **Real-time**      | ASP.NET Core SignalR                                           | Built-in   |
-| **Object Mapping** | AutoMapper                                                     | —          |
+| **Object Mapping** | Manual mapping (private static `MapToResponseDto` helpers in services); AutoMapper registered but `IMapper` never injected | — |
 | **Password Hashing** | BCrypt.Net                                                      | —          |
 | **Image Processing** | SixLabors.ImageSharp (resize + WebP conversion)               | —          |
 | **Virus Scanning** | ClamAV *(currently disabled/stub — always returns clean)*      | —          |
@@ -83,10 +83,10 @@ Sh8lnySolution.sln
 ├── Infrastructure/                    ← OUTER LAYERS (implements abstractions)
 │   ├── Sh8lny.Persistence/            ← EF Core DbContext, GenericRepository, UnitOfWork,
 │   │                                    Configurations (Fluent API), Migrations, Seeding, MailService
-│   └── Sh8lny.Presentation/           ← (Reserved — currently minimal)
+│   └── Sh8lny.Presentation/           ← (Reserved — empty project shell, no code)
 │
 ├── Sh8lny.Web/                        ← COMPOSITION ROOT (API Host)
-│   ├── Controllers/                   ← 17 API Controllers
+│   ├── Controllers/                   ← 19 API Controllers
 │   ├── Hubs/                          ← SignalR Hub(s)
 │   ├── Services/                      ← Web-layer services (SignalRNotifier, BackupWorker)
 │   ├── Mappings/                      ← AutoMapper profiles
@@ -100,7 +100,7 @@ Sh8lnySolution.sln
 │   └── Validation/                    ← Custom validation attributes
 │
 └── Tests/
-    └── Sh8lny.IntegrationTests/       ← Integration test project (scaffolded, minimal)
+    └── Sh8lny.IntegrationTests/       ← Empty folder (no .csproj, no tests — leftover bin/obj only)
 ```
 
 ### Dependency Flow (Onion Rule)
@@ -108,19 +108,22 @@ Sh8lnySolution.sln
 ```
 Web → Service → Abstraction → Domain
 Web → Persistence → Abstraction → Domain
+Persistence → Service   ⚠ legacy, unused — see note below
 Shared → (no dependencies, referenced by all)
 ```
 
-**CRITICAL:** Domain layer has ZERO outward dependencies. Abstraction layer depends ONLY on Domain. Service layer depends ONLY on Abstraction + Domain. Persistence implements Abstraction interfaces. Web is the composition root.
+**CRITICAL:** Domain layer has ZERO outward dependencies. Abstraction layer depends ONLY on Domain (+ Shared). Service layer depends ONLY on Abstraction + Domain. Persistence implements Abstraction interfaces. Web is the composition root.
+
+**Known legacy deviation:** `Sh8lny.Persistence` currently carries a **project reference to `Sh8lny.Service`** that is completely unused (no `using Sh8lny.Service` exists anywhere in Persistence code). Do not extend this edge and do not copy it as a pattern for new code; it is a candidate for removal.
 
 ### Project References
 
-| Project                | References                                                                 |
+| Project                | References (verified from .csproj files)                                  |
 |------------------------|---------------------------------------------------------------------------|
 | `Sh8lny.Domain`        | *(none — innermost)*                                                      |
 | `Sh8lny.Abstraction`   | `Sh8lny.Domain`, `Sh8lny.Shared`                                          |
-| `Sh8lny.Service`       | `Sh8lny.Abstraction`, `Sh8lny.Domain`, `Sh8lny.Shared`                    |
-| `Sh8lny.Persistence`   | `Sh8lny.Abstraction`, `Sh8lny.Domain`, `Sh8lny.Shared`                    |
+| `Sh8lny.Service`       | `Sh8lny.Abstraction`, `Sh8lny.Domain` (Shared reached transitively)       |
+| `Sh8lny.Persistence`   | `Sh8lny.Abstraction`, `Sh8lny.Domain`, `Sh8lny.Service` (unused legacy)   |
 | `Sh8lny.Presentation`  | `Sh8lny.Abstraction`                                                      |
 | `Sh8lny.Web`           | All above                                                                  |
 | `Sh8lny.Shared`        | *(none — standalone)*                                                     |
@@ -326,7 +329,7 @@ Conversation (1) ──→ (N) ConversationParticipant
 | `RequiredSkills`        | `string?`         | Legacy free-text field                   |
 | `MinAcademicYear`       | `string?`         |                                          |
 | `MaxApplicants`         | `int?`            |                                          |
-| `Status`                | `ProjectStatus`   | Enum: `Open`, `InProgress`, `Closed`, `Completed`, `Cancelled` |
+| `Status`                | `ProjectStatus`   | Enum: `Draft`, `Active`, `Pending`, `Complete`, `Cancelled`, `Closed` (new projects are created as `Active`; EF default is `Draft`) |
 | `IsVisible`             | `bool`            | Visibility toggle                        |
 | `CreatedBy`             | `int`             | UserID of creator                        |
 | `CreatedByName`         | `string?`         | Denormalized creator name                |
@@ -568,7 +571,7 @@ Conversation (1) ──→ (N) ConversationParticipant
 | `WouldHireAgain`           | `bool`      |                                          |
 | `Strengths`                | `string?`   |                                          |
 | `AreasForImprovement`      | `string?`   |                                          |
-| `Status`                   | `ReviewStatus` | `Approved`, `Rejected`               |
+| `Status`                   | `ReviewStatus` | `Pending`, `Approved`, `Rejected`, `Flagged` |
 | `IsVerified`               | `bool`      |                                          |
 | `IsPublic`                 | `bool`      |                                          |
 | `CreatedAt`                | `DateTime`  |                                          |
@@ -596,7 +599,7 @@ Conversation (1) ──→ (N) ConversationParticipant
 | `WouldRecommend`               | `bool`      |                                          |
 | `Pros`                         | `string?`   |                                          |
 | `Cons`                         | `string?`   |                                          |
-| `Status`                       | `ReviewStatus` | `Approved`, `Rejected`               |
+| `Status`                       | `ReviewStatus` | `Pending`, `Approved`, `Rejected`, `Flagged` |
 | `IsVerified`                   | `bool`      |                                          |
 | `IsAnonymous`                  | `bool`      |                                          |
 | `CreatedAt`                    | `DateTime`  |                                          |
@@ -636,8 +639,9 @@ Conversation (1) ──→ (N) ConversationParticipant
 | `20260329161809_AddInternshipDays`                         | 2026-03-29   | `TotalInternshipDays` on Student               |
 | `20260422183336_SyncPendingModelChanges`                   | 2026-04-22   | Sync pending model changes                     |
 | `20260423130812_AddSavedProjectsAndReviews`                | 2026-04-23   | `SavedOpportunity`, `StudentReview`, `CompanyReview` tables |
-| `AddFcmTokenToUser`                                       | Pending      | `FcmToken` column on `User` table                         |
-| `AddAppConfig`                                            | Pending      | `AppConfigs` table for maintenance/version config          |
+| `20260604233844_AddFcmTokenToUser`                        | 2026-06-04   | `FcmToken` column on `User` table                         |
+| `20260604233902_AddAppConfig`                             | 2026-06-04   | `AppConfigs` table for maintenance/version config          |
+| `20260605022039_AddAnnouncements`                         | 2026-06-05   | `Announcements` table                                     |
 
 ### Recent Architectural Changes (Verified in Codebase)
 
@@ -646,7 +650,10 @@ Conversation (1) ──→ (N) ConversationParticipant
 3. **`Student.CvFileUrl`** — Present as `string?`, stores URL returned by the `/api/Media` upload endpoint.
 4. **`SavedOpportunity`** — Dedicated join table for bookmarking (Student ↔ Project), NOT a collection on Project.
 5. **Module reviews** — `ProjectModule.Status` supports `Approved` and `Rejected` statuses. `ApplicationModuleProgress` tracks per-application progress.
-6. **Reviews** — Both `StudentReview` and `CompanyReview` have a `Status` field (`ReviewStatus` enum with `Approved`/`Rejected`), plus company/student response fields.
+6. **Reviews** — Both `StudentReview` and `CompanyReview` have a `Status` field (`ReviewStatus` enum: `Pending`, `Approved`, `Rejected`, `Flagged`), plus company/student response fields.
+7. **AutoMapper is registered but UNUSED** — `IMapper` is never injected anywhere. Entity→DTO mapping is done manually via private static `MapToResponseDto(...)` helpers inside services. New code MUST follow the manual mapping pattern.
+8. **`GetQueryable()` does NOT exist on `IGenericRepository<T>`.** Complex reads use multiple repository round-trips, the `FindSingleAsync(predicate, params includes)` overload, or dedicated `IUnitOfWork` helper methods (e.g., `GetStudentWithSkillsAsync`, `GetSavedOpportunitiesWithProjectAsync`) implemented with `.Include()`/`.ThenInclude()` inside `UnitOfWork`.
+9. **`Sh8lny.Persistence` references `Sh8lny.Service`** — a vestigial, completely unused project reference (no `using Sh8lny.Service` in any Persistence file). Do not extend; candidate for removal.
 
 ---
 
@@ -674,16 +681,16 @@ Conversation (1) ──→ (N) ConversationParticipant
 
 ### 4.2 Student Profile Management (`/api/students`)
 
-| Endpoint                         | Method | Auth   | Description                                    |
-|----------------------------------|--------|--------|------------------------------------------------|
-| `/api/students/profile`          | POST   | Student | Create complete student profile               |
-| `/api/students/profile`          | GET    | Student | Get own profile                               |
-| `/api/students/profile`          | PUT    | Student | Update own profile                            |
-| `/api/students/{id}`             | GET    | Auth   | Get student profile by ID                     |
-| `/api/students/search`           | GET    | Auth   | Search students with filters                  |
-| `/api/students/saved-projects`   | GET    | Student | Get bookmarked projects                      |
-| `/api/students/saved-projects`   | POST   | Student | Bookmark a project                           |
-| `/api/students/saved-projects/{id}` | DELETE | Student | Remove bookmark                          |
+| Endpoint                                    | Method | Auth   | Description                                    |
+|---------------------------------------------|--------|--------|------------------------------------------------|
+| `/api/students/profile`                     | POST   | Auth   | Create complete student profile                |
+| `/api/students/profile`                     | GET    | Auth   | Get own profile                                |
+| `/api/students/profile`                     | PUT    | Auth   | Update own profile                             |
+| `/api/students/search`                      | GET    | Public | Search students with filters (paginated)       |
+| `/api/students/saved-projects`              | GET    | Student | Get bookmarked projects                       |
+| `/api/students/saved-projects/{projectId}`  | POST   | Student | Toggle save/unsave for a project (returns new state) |
+
+**Note:** There is NO `GET /api/students/{id}` endpoint and NO delete-bookmark endpoint — bookmark removal is handled by the same toggle endpoint (`POST /api/students/saved-projects/{projectId}`). The controller is `[Authorize]` at class level with `[AllowAnonymous]` only on `search`; the Student role is enforced per-action on the saved-projects endpoints.
 
 ### 4.3 Company Profile Management (`/api/companies`)
 
@@ -702,7 +709,7 @@ Conversation (1) ──→ (N) ConversationParticipant
 | `/api/Projects/{id}`             | PUT    | Company | Update project                                |
 | `/api/Projects/{id}`             | DELETE | Company | Delete project                                |
 | `/api/Projects/{id}`             | GET    | Public  | Get project by ID                             |
-| `/api/Projects`                  | GET    | Public  | List/search projects with filters & pagination|
+| `/api/Projects/search`           | GET    | Public  | Search/filter/sort/paginate projects           |
 | `/api/Projects/my-projects`      | GET    | Company | Get company's own projects                    |
 
 ### 4.5 Application Flow (`/api/Applications`)
@@ -773,7 +780,7 @@ Searches across Students (by name), Companies (by name), and all Users (by email
 | `/api/Reviews/student/{id}`      | GET    | Public  | Get reviews for a student                |
 | `/api/Reviews/company/{id}`      | GET    | Public  | Get reviews for a company                |
 
-**Review statuses:** `Approved` / `Rejected` — Company feedback is supported.
+**Review statuses:** `ReviewStatus` enum: `Pending`, `Approved`, `Rejected`, `Flagged` — company/student responses are supported.
 
 ### 4.11 Certificates (`/api/Certificates`)
 
@@ -934,7 +941,7 @@ Searches across Students (by name), Companies (by name), and all Users (by email
 
 ### 5.3 Automated Testing Suite
 
-**Current State:** `Tests/Sh8lny.IntegrationTests` project exists but is scaffolded with minimal tests.
+**Current State:** No test project exists. `Tests/Sh8lny.IntegrationTests/` is an empty folder (leftover `bin/`/`obj/` only — no `.csproj`, no test files, not referenced by the solution).
 
 **Required:**
 - **Unit Tests** (xUnit + Moq):
@@ -1006,29 +1013,34 @@ Searches across Students (by name), Companies (by name), and all Users (by email
 - Repository interfaces (`IGenericRepository<T>`, `IUnitOfWork`) go in `Sh8lny.Abstraction/Repositories/`.
 - Service implementations go in `Sh8lny.Service/`.
 - Repository and DbContext implementations go in `Sh8lny.Persistence/`.
+- **Factual current state:** `Sh8lny.Persistence` today also carries a project reference to `Sh8lny.Service` — an unused legacy edge (see Dependency Flow note). Do not add new references along that edge. `Sh8lny.Service` and `Sh8lny.Persistence` reach `Sh8lny.Shared` transitively through `Sh8lny.Abstraction`, not directly.
 
-### Rule 2: Always Use `IQueryable` and `.Include()` for Complex Reads
+### Rule 2: Data Access Patterns (As Actually Implemented)
 
 ```csharp
-// ✅ CORRECT — eager load navigation properties
-var project = await _unitOfWork.Projects
-    .GetQueryable()                          // returns IQueryable<Project>
-    .Include(p => p.Company)
-    .Include(p => p.Applications)
-        .ThenInclude(a => a.Student)
-    .Include(p => p.Modules)
-    .Include(p => p.ProjectRequiredSkills)
-        .ThenInclude(prs => prs.Skill)
-    .FirstOrDefaultAsync(p => p.ProjectID == id);
+// ✅ CORRECT — services access data ONLY through IUnitOfWork repository methods
+var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+var company = await _unitOfWork.Companies.GetByIdAsync(project.CompanyID);
+var skills = await _unitOfWork.ProjectRequiredSkills.FindAsync(ps => ps.ProjectID == projectId);
 
-// ❌ WRONG — will cause NullReferenceException on navigation properties
-var project = await _unitOfWork.Projects.GetByIdAsync(id);
-var companyName = project.Company.CompanyName; // 💥 NullReferenceException
+// ✅ CORRECT — eager loading via the includes overload (single-level navigations)
+var application = await _unitOfWork.Applications.FindSingleAsync(
+    a => a.ApplicationID == id,
+    a => a.Project,
+    a => a.Student);
+
+// ✅ CORRECT — complex eager loads go through dedicated IUnitOfWork methods (EF stays in Persistence)
+var student = await _unitOfWork.GetStudentWithSkillsAsync(userId);
+
+// ❌ WRONG — GetQueryable() does NOT exist on IGenericRepository<T>
+var project = await _unitOfWork.Projects.GetQueryable().Include(...); // 💥 compile error
+
+// ❌ WRONG — EF Core types/methods must never appear in Sh8lny.Service (the project has no EF reference)
 ```
 
-- Always use `.Include()` for navigation properties that will be accessed.
-- Use `.ThenInclude()` for nested navigation properties.
-- Return `IQueryable<T>` from repositories for flexible querying.
+- `IGenericRepository<T>` exposes ONLY: `GetByIdAsync`, `GetAllAsync`, `FindAsync(predicate)`, `FindSingleAsync(predicate)`, `FindSingleAsync(predicate, params includes)`, `AddAsync`, `AddRangeAsync`, `Update`, `Remove`, `RemoveRange`, `AnyAsync`, `CountAsync`. There is **no** `GetQueryable()`.
+- The Service layer CANNOT use `.Include()`/`.ThenInclude()` — it has no EF Core project reference. For multi-level eager loading, add a named method to `IUnitOfWork` (existing pattern: `GetStudentWithSkillsAsync`, `GetSavedOpportunitiesWithProjectAsync`) implemented inside `UnitOfWork` with `.Include()`/`.ThenInclude()`.
+- Never read navigation properties that were not loaded by the query — they will be `null` and throw `NullReferenceException`.
 
 ### Rule 3: Never Use Raw `IFormFile` in Domain DTOs or Service Interfaces
 
@@ -1141,19 +1153,22 @@ Configurations: {EntityName}Configuration.cs (e.g., ProjectConfiguration.cs)
 ### Rule 10: Error Handling Patterns
 
 ```csharp
-// Services should catch exceptions and return failure responses
+// Services catch exceptions and return failure responses (universal pattern)
 try
 {
     // ... business logic
-    return ServiceResponse<T>.Success(data);
+    return ServiceResponse<T>.Success(data, "Operation completed successfully.");
 }
 catch (Exception ex)
 {
-    _logger.LogError(ex, "Error in {MethodName}", nameof(MethodName));
-    return ServiceResponse<T>.Failure("An unexpected error occurred.");
+    // Roll back the UnitOfWork transaction first if one is open
+    await _unitOfWork.RollbackTransactionAsync();
+    return ServiceResponse<T>.Failure("An error occurred while <doing X>.",
+        new List<string> { ex.Message });
 }
 ```
 
+- Logging in services is OPTIONAL and mixed today: `FileService`, `TrainingSubmissionService`, `MaintenanceService`, `AnnouncementService`, and `ClamAvService` inject `ILogger<T>`; most other services (e.g., `ProjectService`) do not log and only return the failure envelope. For NEW services, injecting `ILogger<T>` and logging the exception before returning `Failure` is preferred.
 - Real-time delivery failures (SignalR) MUST NOT throw — log and continue.
 - Background service failures (BackupWorker) MUST NOT crash the application.
 
@@ -1275,8 +1290,8 @@ Sh8lnySolution.sln
 │   │   ├── MailService.cs
 │   │   ├── Contexts/
 │   │   │   └── Sha8lnyDbContext.cs
-│   │   ├── Configurations/           ← 28 Fluent API configurations
-│   │   ├── Migrations/               ← 8 migrations (Dec 2025 – Apr 2026)
+│   │   ├── Configurations/           ← 31 Fluent API configurations
+│   │   ├── Migrations/               ← 11 migrations (Dec 2025 – Jun 2026)
 │   │   ├── Repositories/
 │   │   │   ├── GenericRepository.cs
 │   │   │   └── UnitOfWork.cs
@@ -1316,7 +1331,7 @@ Sh8lnySolution.sln
 │   ├── Sh8lny.Web.csproj
 │   ├── Program.cs
 │   ├── appsettings.json
-│   ├── Controllers/                   ← 16 controllers
+│   ├── Controllers/                   ← 19 controllers
 │   ├── Hubs/
 │   │   └── NotificationHub.cs
 │   ├── Services/
@@ -1331,7 +1346,7 @@ Sh8lnySolution.sln
 │   └── Properties/
 │
 ├── Tests/
-│   └── Sh8lny.IntegrationTests/
+│   └── Sh8lny.IntegrationTests/       ← empty (no project file, no tests)
 │
 ├── Dockerfile
 ├── docker-compose.yml
@@ -1345,7 +1360,7 @@ Sh8lnySolution.sln
 |-----------------------|----------------------------------------------------------------------------|
 | `UserType`            | `Student`, `Company`, `University`, `Admin`                                |
 | `ProjectType`         | `Internship`, `GraduationProject`, `Training`, `PartTime`, `FullTime`      |
-| `ProjectStatus`       | `Open`, `InProgress`, `Closed`, `Completed`, `Cancelled`                   |
+| `ProjectStatus`       | `Draft`, `Active`, `Pending`, `Complete`, `Cancelled`, `Closed`            |
 | `ApplicationStatus`   | `Submit`, `Pending`, `UnderReview`, `Accepted`, `InProgress`, `Completed`, `Rejected`, `Withdrawn` |
 | `ModuleStatus`        | `Pending`, `InProgress`, `Completed`, `Approved`, `Rejected`               |
 | `ConversationType`    | `Direct`, `Group`                                                          |
@@ -1354,7 +1369,7 @@ Sh8lnySolution.sln
 | `SkillCategory`       | `Backend`, `Frontend`, `UIUX`, `Mobile`, `AIML`, `Data`, `Testing`, `Marketing`, `Other` |
 | `AcademicYear`        | `FirstYear`, `SecondYear`, `ThirdYear`, `FourthYear`, `FifthYear`          |
 | `ProfileVisibility`   | *(defined in UserSettings)*                                                |
-| `ReviewStatus`        | `Approved`, `Rejected`                                                     |
+| `ReviewStatus`        | `Pending`, `Approved`, `Rejected`, `Flagged`                               |
 | `OpportunityType`     | *(defined in CompletedOpportunity)*                                        |
 | `CompletionStatus`    | *(defined in CompletedOpportunity)*                                        |
 
@@ -1376,5 +1391,5 @@ Sh8lnySolution.sln
 
 ---
 
-> **Last Updated:** May 2026
+> **Last Updated:** September 2026
 > **Maintainer:** Sha8alny Development Team
